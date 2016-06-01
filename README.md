@@ -194,9 +194,10 @@ Reducers are functions that will be folded over each value that will be parsed.
 
 ## Caveats ##
 
-1. Only `factor` can have `any` as children.
-2. A `span` must have more than one child.
-3. In a left recursion alternative, only the first element may be the 
+The current implementation does not enforce the following rules properly.
+
+1. A `span` must have more than one child.
+2. In a left recursion alternative, only the first element may be the
    left-recurring non-terminal. There cannot be more than one consecutive
    left-recurring non-terminal.
 
@@ -210,10 +211,10 @@ Reducers are functions that will be folded over each value that will be parsed.
                 span(A,  A, "1", "2"), "1"
              end)
    ```
-4. An `any` element must not have any `opt` children.
-5. A `rep` element that is a child of an `any` element requires 1 or more
+3. An `any` element must not have any `opt` children.
+4. A `rep` element that is a child of an `any` element requires 1 or more
    elements to match.
-6. A `rep` element that is a child of an `span` element requires 0 or more
+5. A `rep` element that is a child of an `span` element requires 0 or more
    elements to match.
-
-    
+6. The first nonterminal element of a span that is part of a left recursion
+   path, cannot be wrapped in `opt` or `rep`.
