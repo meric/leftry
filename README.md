@@ -4,8 +4,9 @@ This is alpha software.
 
 ## TODO ##
 
-Implement Lua grammar in BNF.lua to prove it can handle the grammar of a
+* Implement Lua grammar in BNF.lua to prove it can handle the grammar of a
 programming language.
+* Implement whitespacing support.
 
 ## Left recursion ##
 
