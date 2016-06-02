@@ -23,8 +23,24 @@ local function map(f, t)
   return u
 end
 
-local function copy(t)
+local function contains(t, u)
+  for i=1, #t do
+    if t[i] == u then
+      return true
+    end
+  end
+end
+
+local function set(t)
   local u = {}
+  for i=1, #t do
+    u[t[i]] = true
+  end
+  return u
+end
+
+local function copy(t, u)
+  u = u or {}
   for k, v in pairs(t) do
     u[k] = v
   end
@@ -52,5 +68,7 @@ return {
     torepresentation=torepresentation,
     keys=keys,
     trait=trait,
-    copy=copy
+    copy=copy,
+    contains=contains,
+    set=set
 }

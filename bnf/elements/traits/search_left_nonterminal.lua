@@ -35,13 +35,8 @@ search_left_nonterminal:where(any, function(self, target, seen)
 end)
 
 search_left_nonterminal:where(span, function(self, target, seen)
-  for i=1, #self do
-    if search_left_nonterminal(self[1], target, seen) then
-      return true
-    end
-    if getmetatable(self[i]) ~= opt then
-      break
-    end
+  if search_left_nonterminal(self[1], target, seen) then
+    return true
   end
 end)
 

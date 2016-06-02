@@ -6,7 +6,9 @@ local any = require("bnf.elements.any")
 
 local prototype = utils.prototype
 local copy = utils.copy
+local set = utils.set
 local search_left_nonterminal = traits.search_left_nonterminal
+local left_nonterminals = traits.left_nonterminals
 
 local factor = prototype("factor", function(self, name, canonize, initializer)
   return setmetatable({
@@ -35,6 +37,17 @@ function factor:setup()
   self.setup = function() end
 end
 
+function factor:actualize()
+  -- Prioritise left recursion alternatives.
+  local canon = self.canon
+  table.sort(canon, function(a, b)
+    return search_left_nonterminal(a, self)
+      and not search_left_nonterminal(b, self)
+  end)
+  self.canonize = function() return canon end
+  self.actualize = function() end
+end
+
 function factor:alias(invariant, position, limit, peek, exclude, skip)
   return self.canon(invariant, position, limit, peek, exclude, skip)
 end
@@ -55,15 +68,16 @@ function factor:measure(invariant, rest, limit)
     local position = rest
     for i=1, #self.canon do
       if search_left_nonterminal(self.canon[i], self) then
-        rest = self.canon[i](invariant, position, limit, true, nil,
-          {[self]=true})
+        local skip = set(traits.left_nonterminals(self))
+        skip[self] = true
+        rest = self.canon[i](invariant, position, limit, true, nil, skip)
         if rest then
           final = rest
           break
         end
       end
     end
-    if not rest then
+    if not rest or position == rest then
       break
     end
     if not sections then
@@ -75,6 +89,7 @@ function factor:measure(invariant, rest, limit)
 end
 
 function factor.trace(top, invariant, skip, sections)
+  local span = require("bnf.elements.span")
   local index = #sections
   local paths = {}
   while index > 0 do
@@ -83,17 +98,15 @@ function factor.trace(top, invariant, skip, sections)
 
     local rest, _, choice = top.canon(invariant, position, limit, true,
       exclude, skip)
-
+    assert(rest)
     local alternative = top.canon[choice]
 
     table.insert(paths, {choice=choice, limit=limit, nonterminal=top})
 
     if getmetatable(alternative) ~= factor then
       index = index - 1
-
-      top = alternative[1]
-
-      while getmetatable(top) ~= factor do
+      top = alternative
+      while getmetatable(top) == span do
         top = top[1]
       end
     else
@@ -106,7 +119,6 @@ end
 
 function factor:left(invariant, position, limit, peek, exclude, skip,
     given_rest, given_value)
-
   if given_rest then
     return given_rest, given_value
   end
@@ -117,18 +129,23 @@ function factor:left(invariant, position, limit, peek, exclude, skip,
     exclude = rawset(copy(exclude or {}), self, true)
   end
 
-  -- Prefix
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
-    position, limit, peek, exclude, skip)
+    position, limit, peek, exclude)
 
   if not prefix_rest then
     return nil
   end
 
+  if limit < prefix_rest then
+
+    return prefix_rest, self.initializer(
+      prefix_value, self, position, prefix_rest, prefix_choice)
+  end
+
   local rest, sections = self:measure(invariant, prefix_rest, limit)
 
   if peek then
-    return rest
+    return rest or prefix_rest
   end
 
   if not sections then
@@ -137,7 +154,8 @@ function factor:left(invariant, position, limit, peek, exclude, skip,
   end
 
   if not skip or not skip[self] then
-    skip = rawset(copy(skip or {}), self, true)
+    skip = rawset(copy(skip or {}, set(traits.left_nonterminals(self))), self,
+      true)
   end
 
   local top, paths = self:trace(invariant, skip, sections)
@@ -145,6 +163,10 @@ function factor:left(invariant, position, limit, peek, exclude, skip,
   while getmetatable(top) == factor do
     local _, __, choice = top.canon(invariant, position, prefix_rest-1, true,
       exclude)
+    -- we want  limit to act as minimum here. floor.
+    -- change limit to rest. instead of doing position > limit, 
+    -- we do position > #invariant.src and not limit or rest == limit
+    -- rename limit to expect
     table.insert(paths, {choice=choice, limit=prefix_rest-1, nonterminal=top})
     top = top.canon[choice]
   end
@@ -162,14 +184,14 @@ function factor:left(invariant, position, limit, peek, exclude, skip,
     end
     value = top.initializer(value, self, position, rest, path.choice)
   end
-
   return rest, value
 end
 
 function factor:call(invariant, position, limit, peek, exclude, skip,
     given_rest, given_value)
   self:setup()
-  if search_left_nonterminal(self, self) then
+  self:actualize()
+  if search_left_nonterminal(self.canon, self) then
     self.call = self.left
   elseif self.initializer ~= factor.initializer then
     self.call = self.wrap

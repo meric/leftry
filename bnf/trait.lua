@@ -22,7 +22,7 @@ function trait:__call(this, ...)
     return self[mt](this, ...)
   end
   error(tostring(self).." not implemented for: ".. tostring(this)..
-      " :: ".. tostring(getmetatable(this) or type(this)))
+      " :: ".. tostring(getmetatable(this) or "")..", "..type(this))
 end
 
 return trait

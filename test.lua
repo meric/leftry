@@ -1,5 +1,7 @@
 local utils = require("bnf").utils
 local grammar = require("bnf").grammar
+local lua = require("bnf.language.lua")
+local traits = require("bnf.elements.traits")
 local span = grammar.span
 local opt = grammar.opt
 local rep = grammar.rep
@@ -36,6 +38,26 @@ function tests.factor_parse_success()
   end)
   local src = "111"
   return {A({src=src}, 1)}, {#src + 1, "111"}
+end
+
+function tests.factor_first_third_parse_success()
+  local A = factor("A", function(A) return
+    span(A, "2", A, "3") % function(initial, value)
+      return (initial or "") .. value
+    end, "1"
+  end)
+  local src = "1213"
+  return {A({src=src}, 1)}, {#src + 1, "1213"}
+end
+
+function tests.factor_first_second_parse_success()
+  local A = factor("A", function(A) return
+    span(A, A, "3") % function(initial, value)
+      return (initial or "") .. value
+    end, "1"
+  end)
+  local src = "113"
+  return {A({src=src}, 1)}, {#src + 1, "113"}
 end
 
 function tests.factor_nested_parse_success()
@@ -113,6 +135,75 @@ function tests.any_as_iterator()
   return actual, {2, 3, 4, 5, 6, 7, 8, 9, 10}
 end
 
+function tests.lua_string_parse_success()
+  local src = '"hello world!"'
+  local rest, values = lua.LiteralString({src=src}, 1)
+  return {rest, unpack(values or {})}, {#src + 1, '"', "hello world!", '"'}
+end
+
+function tests.lua_exp_parse_success()
+  local src = '"hello world!"'
+  local rest, values = lua.Exp({src=src}, 1)
+  return {rest, unpack(values or {})}, {#src + 1, '"', "hello world!", '"'}
+end
+
+function tests.lua_exp1_parse_success()
+  local src = '1+1'
+  local rest, values = lua.Exp({src=src}, 1)
+  return {rest, unpack(values or {})}, {#src + 1, 1, "+", 1}
+end
+
+function tests.lua_var_parse_success()
+  local src = 'print'
+  local rest, values = lua.Var({src=src}, 1)
+  return {rest, values}, {#src + 1, "print"}
+end
+
+function tests.lua_prefixexp_parse_success()
+  local src = 'print'
+  local rest, values = lua.PrefixExp({src=src}, 1)
+  return {rest, values}, {#src + 1, "print"}
+end
+
+function tests.lua_args_parse_success()
+  local src = '(1)'
+  local rest, values = lua.PrefixExp({src=src}, 1)
+  return {rest, unpack(values or {})}, {#src + 1, "(", 1, ")"}
+end
+
+function tests.lua_args2_parse_success()
+  local src = '()'
+  local rest, values = lua.Args({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_functioncall_parse_success()
+  local src = 'print(1)'
+  local rest, values = lua.FunctionCall({src=src}, 1, nil)
+  return {rest, values[1], values[2][1], values[2][2][1], values[2][3]},
+    {#src + 1, "print", "(", 1, ")"}
+end
+
+function tests.lua_functioncall2_parse_success()
+  local src = 'a()()'
+  local rest, values = lua.FunctionCall({src=src}, 1, nil)
+  print(values[2][4])
+  return {rest, values[1], values[2][1], values[2][3]},
+    {#src + 1, "a", "(", ")", "(", ")"}
+end
+
+function tests.lua_var_parse_failure()
+  local src = 'a()'
+  local rest, values = lua.Var({src=src}, 1, nil)
+  return {rest}, {2}
+end
+
+function tests.lua_search_nonterminal_binop()
+  lua.BinOp:setup()
+  return {traits.search_left_nonterminal(lua.BinOp.canonize(),
+    lua.BinOp)}, {nil}
+end
+
 local function compare(actual, expected)
   assert(actual) assert(expected)
   local passed = true
@@ -135,15 +226,17 @@ end
 local passed = true
 local passes, fails = 0, 0
 for _, name in ipairs(utils.keys(tests)) do
-  local test = tests[name]
-  io.write(("test (%s)"):format(name))
-  local passed, n = compare(test())
-  if passed then
-    io.write(("...%s ok\n"):format(n))
-    passes = passes + 1
-  else
-    io.write(("...%s total\n"):format(n))
-    fails = fails + 1
+  if not arg[1] or arg[1] == name then
+    local test = tests[name]
+    io.write(("test (%s)"):format(name))
+    local passed, n = compare(test())
+    if passed then
+      io.write(("...%s ok\n"):format(n))
+      passes = passes + 1
+    else
+      io.write(("...%s total\n"):format(n))
+      fails = fails + 1
+    end
   end
 end
 
