@@ -9,7 +9,7 @@ local opt = prototype("opt", function(self, element)
 end)
 
 function opt:__tostring()
-  return torepresentation(term, {self.element})
+  return torepresentation(opt, {self.element})
 end
 
 function opt:__call(invariant, position, expect, peek, exclude, skip,

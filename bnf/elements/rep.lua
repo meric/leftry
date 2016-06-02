@@ -9,7 +9,7 @@ local rep = prototype("rep", function(self, element, reducer)
 end)
 
 function rep:__tostring()
-  return torepresentation(term, {self.element})
+  return torepresentation(rep, {self.element})
 end
 
 function rep.reducer(initial, value, self, position, rest, i)

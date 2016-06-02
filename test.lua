@@ -192,6 +192,19 @@ function tests.lua_functioncall2_parse_success()
     values[2][3]}, {#src + 1, "a", "(", ")", "(", ")"}
 end
 
+function tests.lua_retstat_parse_success()
+  local src = 'return(1+1)'
+  local rest, values = lua.RetStat({src=src}, 1, nil, true)
+  return {rest, unpack(values or {})}, {#src + 1}
+end
+
+function tests.lua_block_parse_success()
+  local src = 'print(1);return(1)'
+  lua.Block:setup()
+  local rest, values = lua.Block.canon({src=src}, 1, nil, true)
+  return {rest, unpack(values or {})}, {#src + 1}
+end
+
 function tests.lua_var_parse_failure()
   local src = 'a()'
   local rest, values = lua.Var({src=src}, 1, nil)

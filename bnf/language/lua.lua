@@ -63,6 +63,7 @@ Chunk = factor("Chunk", function() return
 Block = factor("Block", function() return
   span(rep(Stat), opt(RetStat)) end)
 Stat = factor("Stat", function() return
+  ';',
   span(VarList, "=", ExpList),
   FunctionCall,
   Label,
@@ -192,6 +193,9 @@ Numeral = function(invariant, position, limit, peek)
   return rest, tonumber(src:sub(position, rest-1))
 end
 
+local keywords = {
+  ["return"] = true
+}
 Name = function(invariant, position, limit, peek)
   local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
   local zero, nine = 48, 57
@@ -214,11 +218,17 @@ Name = function(invariant, position, limit, peek)
     rest = i + 1
   end
 
+  local value = src:sub(position, rest-1)
+
+  if keywords[value] then
+    return
+  end
+
   if peek then
     return rest
   end
 
-  return rest, src:sub(position, rest-1)
+  return rest, value
 end
 
 return {
