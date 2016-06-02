@@ -29,10 +29,9 @@ function span:__tostring()
   return torepresentation(span, self)
 end
 
-function span:__call(invariant, position, limit, peek, exclude, skip,
+function span:__call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
-  limit = limit or #invariant.src
-  if position > limit or (exclude and exclude[self[1]]) then
+  if position > #invariant.src or (exclude and exclude[self[1]]) then
     return nil
   end
   local rest = position
@@ -55,7 +54,7 @@ function span:__call(invariant, position, limit, peek, exclude, skip,
     if i ~= 1 then
       given_rest, given_value = nil, nil
     end
-    rest, value = self[i](invariant, rest, limit, peek, exclude, skip,
+    rest, value = self[i](invariant, rest, nil, peek, exclude, skip,
       given_rest, given_value)
     if not rest then
       return nil
@@ -63,6 +62,9 @@ function span:__call(invariant, position, limit, peek, exclude, skip,
     if not peek then
       values = reducer(values, value, self, sub, rest, i)
     end
+  end
+  if expect and rest ~= expect then
+    return
   end
   return rest, values
 end

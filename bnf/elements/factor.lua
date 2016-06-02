@@ -48,12 +48,12 @@ function factor:actualize()
   self.actualize = function() end
 end
 
-function factor:alias(invariant, position, limit, peek, exclude, skip)
-  return self.canon(invariant, position, limit, peek, exclude, skip)
+function factor:alias(invariant, position, expect, peek, exclude, skip)
+  return self.canon(invariant, position, expect, peek, exclude, skip)
 end
 
-function factor:wrap(invariant, position, limit, peek, exclude, skip)
-  local rest, value, choice = self.canon(invariant, position, limit, peek,
+function factor:wrap(invariant, position, expect, peek, exclude, skip)
+  local rest, value, choice = self.canon(invariant, position, expect, peek,
     exclude, skip)
   if not peek and rest then
     return rest, self.initializer(value, self, position, rest, choice)
@@ -61,29 +61,30 @@ function factor:wrap(invariant, position, limit, peek, exclude, skip)
   return rest, value
 end
 
-function factor:measure(invariant, rest, limit)
+function factor:measure(invariant, rest, expect)
   local sections
   local final
+  local limit = #invariant.src
   while limit >= rest do
     local position = rest
     for i=1, #self.canon do
       if search_left_nonterminal(self.canon[i], self) then
         local skip = set(traits.left_nonterminals(self))
         skip[self] = true
-        rest = self.canon[i](invariant, position, limit, true, nil, skip)
+        rest = self.canon[i](invariant, position, expect, true, nil, skip)
         if rest then
           final = rest
           break
         end
       end
     end
-    if not rest or position == rest then
+    if not rest or position == rest or (expect and rest == expect) then
       break
     end
     if not sections then
       sections = {}
     end
-    table.insert(sections, {position=position, limit=rest-1})
+    table.insert(sections, {position=position, expect=rest})
   end
   return final, sections
 end
@@ -94,14 +95,15 @@ function factor.trace(top, invariant, skip, sections)
   local paths = {}
   while index > 0 do
     local section = sections[index]
-    local position, limit = section.position, section.limit
+    local position, expect = section.position, section.expect
 
-    local rest, _, choice = top.canon(invariant, position, limit, true,
+    -- print(position, expect, invariant.src, top.canon, skip)
+    local rest, _, choice = top.canon(invariant, position, expect, true,
       exclude, skip)
     assert(rest)
     local alternative = top.canon[choice]
 
-    table.insert(paths, {choice=choice, limit=limit, nonterminal=top})
+    table.insert(paths, {choice=choice, expect=expect, nonterminal=top})
 
     if getmetatable(alternative) ~= factor then
       index = index - 1
@@ -117,32 +119,35 @@ function factor.trace(top, invariant, skip, sections)
   return top, paths
 end
 
-function factor:left(invariant, position, limit, peek, exclude, skip,
+function factor:left(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
   if given_rest then
+    if expect and expect ~= given_rest then
+      return
+    end
     return given_rest, given_value
   end
 
-  limit = limit or #invariant.src
+  if position > #invariant.src then
+    return
+  end
 
   if not exclude or not exclude[self] then
     exclude = rawset(copy(exclude or {}), self, true)
   end
 
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
-    position, limit, peek, exclude)
+    position, nil, peek, exclude)
 
   if not prefix_rest then
-    return nil
+    return
   end
 
-  if limit < prefix_rest then
+  local rest, sections = self:measure(invariant, prefix_rest, expect)
 
-    return prefix_rest, self.initializer(
-      prefix_value, self, position, prefix_rest, prefix_choice)
+  if expect and (rest or prefix_rest) ~= expect then
+    return
   end
-
-  local rest, sections = self:measure(invariant, prefix_rest, limit)
 
   if peek then
     return rest or prefix_rest
@@ -153,21 +158,20 @@ function factor:left(invariant, position, limit, peek, exclude, skip,
       prefix_value, self, position, prefix_rest, prefix_choice)
   end
 
-  if not skip or not skip[self] then
-    skip = rawset(copy(skip or {}, set(traits.left_nonterminals(self))), self,
-      true)
-  end
+  skip = rawset(copy(skip or {}, set(traits.left_nonterminals(self))), self,
+    true)
 
   local top, paths = self:trace(invariant, skip, sections)
 
   while getmetatable(top) == factor do
-    local _, __, choice = top.canon(invariant, position, prefix_rest-1, true,
-      exclude)
+    local _, __, choice = top.canon(invariant, position, prefix_rest, true)
+    assert(choice and _ == prefix_rest)
+
     -- we want  limit to act as minimum here. floor.
     -- change limit to rest. instead of doing position > limit, 
     -- we do position > #invariant.src and not limit or rest == limit
     -- rename limit to expect
-    table.insert(paths, {choice=choice, limit=prefix_rest-1, nonterminal=top})
+    table.insert(paths, {choice=choice, expect=prefix_rest, nonterminal=top})
     top = top.canon[choice]
   end
 
@@ -177,17 +181,18 @@ function factor:left(invariant, position, limit, peek, exclude, skip,
     local top = path.nonterminal
     local alternative = top.canon[path.choice]
     if i == #paths then
-      rest, value = alternative(invariant, position, path.limit, peek)
+      rest, value = alternative(invariant, position, path.expect, peek)
+      -- print(rest, value)
     else
-      rest, value = alternative(invariant, position, path.limit, peek,
-        nil, nil, paths[i+1].limit + 1, value)
+      rest, value = alternative(invariant, position, path.expect, peek,
+        nil, nil, paths[i+1].expect, value)
     end
     value = top.initializer(value, self, position, rest, path.choice)
   end
   return rest, value
 end
 
-function factor:call(invariant, position, limit, peek, exclude, skip,
+function factor:call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
   self:setup()
   self:actualize()
@@ -198,13 +203,13 @@ function factor:call(invariant, position, limit, peek, exclude, skip,
   else
     self.call = self.alias
   end
-  return self:call(invariant, position, limit, peek, exclude, skip,
+  return self:call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
 end
 
-function factor:__call(invariant, position, limit, peek, exclude, skip,
+function factor:__call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
-  return self:call(invariant, position, limit, peek, exclude, skip,
+  return self:call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
 end
 

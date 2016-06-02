@@ -187,9 +187,9 @@ end
 function tests.lua_functioncall2_parse_success()
   local src = 'a()()'
   local rest, values = lua.FunctionCall({src=src}, 1, nil)
-  print(values[2][4])
-  return {rest, values[1], values[2][1], values[2][3]},
-    {#src + 1, "a", "(", ")", "(", ")"}
+
+  return {rest, values[1][1], values[1][2][1], values[1][2][3], values[2][1],
+    values[2][3]}, {#src + 1, "a", "(", ")", "(", ")"}
 end
 
 function tests.lua_var_parse_failure()

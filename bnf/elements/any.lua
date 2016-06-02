@@ -28,9 +28,8 @@ function any:index()
   end
 end
 
-function any:__call(invariant, position, limit, peek, exclude, skip)
-  limit = limit or #invariant.src
-  if position > limit then
+function any:__call(invariant, position, expect, peek, exclude, skip)
+  if position > #invariant.src then
     return nil
   end
   local reducer = self.reducer
@@ -44,7 +43,7 @@ function any:__call(invariant, position, limit, peek, exclude, skip)
   local alternative
   for i=1, #alternatives do
     -- Note: A `rep` element in `any` acts like a non-optional element.
-    rest, value = alternatives[i](invariant, position, limit, peek, exclude,
+    rest, value = alternatives[i](invariant, position, expect, peek, exclude,
       skip)
     if rest and rest ~= sub then
       alternative = i
