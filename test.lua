@@ -7,7 +7,6 @@ local opt = grammar.opt
 local rep = grammar.rep
 local any = grammar.any
 local factor = grammar.factor
-
 local tests = {}
 
 function tests.dotmap()
@@ -235,21 +234,107 @@ function tests.lua_exp()
   return {rest}, {#src + 1}
 end
 
-function tests.lua_functioncall_skip()
-  local src = 'a()'
-  local rest, values = lua.PrefixExp({src=src}, 1, nil, true)
+function tests.lua_stat()
+  local src = 'local utils = require("bnf").utils'
+  local rest, values = lua.Stat({src=src}, 1, nil)
   return {rest}, {#src + 1}
 end
 
--- function tests.lua_big_parse()
---   local f = io.open("test.lua")
---   local invariant = {src=f:read("*all")}
---   f.close()
+function tests.lua_block()
+  local src = [[
+    local utils = require("bnf").utils
+    local grammar = require("bnf").grammar
+  ]]
+  local rest, values = lua.Block({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
 
---   local rest = lua.Chunk(invariant, 1)
+function tests.lua_table()
+  local src = 'local test = {}'
+  local rest, values = lua.Stat({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
 
---   return {}, {}
--- end
+function tests.lua_function()
+  local src =[[function(x) return x end]]
+  local rest, values = lua.Exp({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_function1()
+  local src =[[return {function(x) return x + 1 end}]]
+  local rest, values = lua.RetStat({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_function2()
+  local src =[[a.b()]]
+  local rest, values = lua.Exp({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_length()
+  local src =[[#src]]
+  local rest, values = lua.Exp({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_big_for()
+  local src = [[
+  for _, name in ipairs(utils.keys(tests)) do
+    if not arg[1] or arg[1] == name then
+      local test = tests[name]
+      io.write(("test (%s)"):format(name))
+      local passed, n = compare(test())
+      if passed then
+        io.write(("...%s ok\n"):format(n))
+        passes = passes + 1
+      else
+        io.write(("...%s total\n"):format(n))
+        fails = fails + 1
+      end
+    end
+  end
+  ]]
+  local rest, values = lua.Stat({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_big_function()
+  local src = [[
+    Comment = factor("Comment", function() return
+      grammar.span("--", function(invariant, position)
+        while invariant.src:sub(position, position) ~= "\n" do
+          position = position + 1
+        end
+        return position
+      end) end)
+  ]]
+  local rest, values = lua.Stat({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_big_parse()
+  local f = io.open("test.lua")
+  local invariant = {src=f:read("*all")}
+  f.close()
+
+  local rest = lua.Chunk(invariant, 1, nil, true)
+
+  print(invariant.src:sub(rest, rest+100))
+  return {rest}, {#invariant.src + 1}
+end
+
+function tests.lua_big_parse2()
+  local f = io.open("bnf/language/lua.lua")
+  local invariant = {src=f:read("*all")}
+  f.close()
+
+  local rest = lua.Chunk(invariant, 1, nil, true)
+
+  print(invariant.src:sub(rest, rest+100))
+  return {rest}, {#invariant.src + 1}
+end
 
 local function compare(actual, expected)
   assert(actual) assert(expected)

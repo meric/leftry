@@ -114,16 +114,11 @@ function factor.trace(top, invariant, skip, sections)
     else
       top = alternative
     end
+    assert(getmetatable(top) == factor)
   end
 
   return top, paths
 end
-
--- function factor:prefix(invariant, position, exclude)
---   for i=1, choice in ipairs(self.canon) do
-
---   end
--- end
 
 function factor:left(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
@@ -147,18 +142,12 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
     position, nil, peek, exclude)
 
-  if prefix_rest and getmetatable(self.canon[prefix_choice]) == span then
-    if search_left_nonterminal(self.canon, self.canon[prefix_choice][1]) then
-      prefix_rest, prefix_value = self.canon[prefix_choice][1](invariant,
-        position, nil, peek, exclude)
-    end
-  end
-
   if not prefix_rest then
     return
   end
 
-  local rest, sections = self:measure(invariant, prefix_rest, expect, orig_exclude)
+  local rest, sections = self:measure(invariant, prefix_rest, expect,
+    orig_exclude)
 
   if expect and (rest or prefix_rest) ~= expect then
     return
@@ -178,9 +167,15 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
 
   local top, paths = self:trace(invariant, skip, sections)
 
+  if not paths then
+    return
+  end
+
   while getmetatable(top) == factor do
     local _, __, choice = top.canon(invariant, position, prefix_rest, true)
-    assert(choice and _ == prefix_rest)
+    if not choice or _ ~= prefix_rest then
+      break
+    end
     table.insert(paths, {choice=choice, expect=prefix_rest, nonterminal=top})
     top = top.canon[choice]
   end
@@ -190,6 +185,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     local path = paths[i]
     local top = path.nonterminal
     local alternative = top.canon[path.choice]
+
     if i == #paths then
       rest, value = alternative(invariant, position, path.expect, peek)
     else

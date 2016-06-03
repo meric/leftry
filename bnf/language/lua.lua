@@ -54,7 +54,7 @@ local term = grammar.term
 local Chunk, Block, Stat, RetStat, Label, FuncName, VarList, Var, NameList,
       ExpList, Exp, PrefixExp, FunctionCall, Args, FunctionDef, FuncBody,
       ParList, TableConstructor, FieldList, Field, FieldSep, BinOp, UnOp,
-      Numeral, LiteralString, Name, Space
+      Numeral, LiteralString, Name, Space, Comment, LongString
 
 local dquoted, squoted
 
@@ -87,16 +87,29 @@ local function isalpha(byte)
     byte >= ALPHA and byte <= ZETA)
 end
 
+Comment = factor("Comment", function() return
+  grammar.span("--", function(invariant, position)
+    while invariant.src:sub(position, position) ~= "\n" do
+      position = position + 1
+    end
+    return position
+  end) end)
+
 local function spacing(invariant, position, previous, current)
   local src = invariant.src
   local byte = src:byte(position)
 
-  -- Skip whitespaces.
-  local rest = position
-  while spaces[byte] do
-    rest = rest + 1
+  -- Skip whitespace and comments
+  local comment = position
+  repeat
+    rest = comment
     byte = src:byte(rest)
-  end
+    while spaces[byte] do
+      rest = rest + 1
+      byte = src:byte(rest)
+    end
+    comment = Comment(invariant, rest, nil, true)
+  until not comment
 
   -- Check for required whitespace between two alphanumeric nonterminals.
   if rest == position and getmetatable(previous) == term then
@@ -104,6 +117,7 @@ local function spacing(invariant, position, previous, current)
       return
     end
   end
+
 
   -- Return advanced cursor.
   return rest
@@ -126,13 +140,14 @@ Stat = factor("Stat", function() return
   "break",
   span("goto", Name),
   span("do", Block, "end"),
-  span("while", Exp, "do", Block, "end"),
+  span("while", Exp, "do", opt(Block), "end"),
   span("repeat", Block, "until", Exp),
-  span("if", Exp, "then", Block, rep(span("elseif", Exp, "then", Block)),
-    opt(span("else", Block), "end")),
+  span("if", Exp, "then", opt(Block),
+    rep(span("elseif", Exp, "then", opt(Block))),
+    opt(span("else", opt(Block))), "end"),
   span("for", Name, "=", Exp, ",", Exp, opt(span(",", Exp)), "do", Block,
     "end"),
-  span("for", NameList, "in", ExpList, "do", Block, "end"),
+  span("for", NameList, "in", ExpList, "do", opt(Block), "end"),
   span("function", FuncName, FuncBody),
   span("local", "function", Name, FuncBody),
   span("local", NameList, opt(span("=", ExpList))) end)
@@ -162,11 +177,11 @@ FunctionDef = factor("FunctionDef", function() return
 PrefixExp = factor("PrefixExp", function() return
   Var, FunctionCall, span("(", Exp, ")") end)
 FuncBody = factor("FuncBody", function() return
-  span("(", opt(ParList), ")", Block, "end") end)
+  span("(", opt(ParList), ")", opt(Block), "end") end)
 ParList = factor("ParList", function() return
   span(NameList, opt(span(",", "..."))), "..." end)
 TableConstructor = factor("TableConstructor", function() return
-  span("{", FieldList, "}") end)
+  span("{", opt(FieldList), "}") end)
 FieldList = factor("FieldList", function() return
   span(Field, rep(span(FieldSep, Field)), opt(FieldSep)) end)
 FieldSep = factor("FieldSep", function() return
@@ -174,21 +189,42 @@ FieldSep = factor("FieldSep", function() return
 Field = factor("Field", function() return
   span("[", Exp, "]", "=", Exp), span(Name, "=", Exp), Exp end)
 BinOp = factor("BinOp", function() return 
-  "^", "*", "/", "//", "%", "+", "-", "..", "<<", ">>", "&", "~", "|", "<",
-  ">", "<=", ">=", "~=", "==", "and", "or" end)
+  "^", "*", "/", "//", "%", "+", "-", "..", "<<", ">>", "&", "|",  "<=",
+  ">=", "<", ">", "~=", "==", "and", "or" end)
 UnOp = factor("UnOp", function() return
   "-", "not", "#", "~" end)
 LiteralString = factor("LiteralString", function() return
-  span("\"", opt(dquoted), "\""),
-  span("\'", opt(squoted), "\'") end)
+  grammar.span("\"", opt(dquoted), "\""),
+  grammar.span("\'", opt(squoted), "\'"),
+  LongString end)
+
+long_string_quote = grammar.span("[", rep("="), "[")
+LongString = function(invariant, position, expect, peek)
+  local rest = long_string_quote(invariant, position, nil, true)
+  if not rest then
+    return
+  end
+  local level = position - rest - 2
+  local endquote = "]"..("="):rep(level) .. "]"
+  local endquotestart, endquoteend = invariant.src:find(endquote, rest)
+  if not endquotestart then
+    return
+  end
+  local value = invariant.src:sub(rest, endquotestart-1)
+  rest = endquoteend + 1
+  if peek then
+    return rest
+  end
+  return rest, value
+end
 
 -- Functions
 local function stringcontent(quotechar)
-  return function(invariant, position, limit)
+  return function(invariant, position, expect)
     local src = invariant.src
-    limit = math.min(#src, limit or #src)
+    local limit = #src
     if position > limit then
-      return position
+      return
     end
     local escaped = false
     local value = {}
@@ -250,7 +286,11 @@ Numeral = function(invariant, position, limit, peek)
 end
 
 local keywords = {
-  ["return"] = true
+  ["return"] = true,
+  ["function"] = true,
+  ["end"] = true,
+  ["in"] = true,
+  ["not"] = true
 }
 
 Name = function(invariant, position, expect, peek)

@@ -28,6 +28,15 @@ function any:index()
   end
 end
 
+local function willskip(skip, alternative)
+  local search_left_nonterminal = require("bnf.elements.traits").search_left_nonterminal
+  for nonterminal in pairs(skip) do
+    if search_left_nonterminal(alternative, nonterminal) then
+      return true
+    end
+  end
+end
+
 function any:__call(invariant, position, expect, peek, exclude, skip)
   if position > #invariant.src then
     return nil
@@ -44,11 +53,13 @@ function any:__call(invariant, position, expect, peek, exclude, skip)
   for i=1, #alternatives do
     if not exclude or not exclude[alternatives[i]] then
       -- Note: A `rep` element in `any` acts like a non-optional element.
-      rest, value = alternatives[i](invariant, position, expect, peek, exclude,
-        skip)
-      if rest and rest ~= sub then
-        alternative = i
-        break
+      if not skip or willskip(skip, alternatives[i]) then
+        rest, value = alternatives[i](invariant, position, expect, peek,
+          exclude, skip)
+        if rest and rest ~= sub then
+          alternative = i
+          break
+        end
       end
     end
   end

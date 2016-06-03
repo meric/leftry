@@ -50,11 +50,17 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
     end
     first = first + 1
   end
+
+  if self.separator then
+    rest = self.separator(invariant, rest, nil, self[1])
+  end
+
   for i=first, #self do 
     local value
     local sub = rest or position
     if i > 1 then
       skip = nil
+      exclude = nil
     end
     if i ~= 1 then
       given_rest, given_value = nil, nil
