@@ -1,9 +1,9 @@
 local grammar = require("bnf.grammar")
 
-local span = grammar.span
 local opt = grammar.opt
 local rep = grammar.rep
 local factor = grammar.factor
+local term = grammar.term
 
 -- Lua Grammar
 -- chunk ::= block
@@ -54,9 +54,65 @@ local factor = grammar.factor
 local Chunk, Block, Stat, RetStat, Label, FuncName, VarList, Var, NameList,
       ExpList, Exp, PrefixExp, FunctionCall, Args, FunctionDef, FuncBody,
       ParList, TableConstructor, FieldList, Field, FieldSep, BinOp, UnOp,
-      Numeral, LiteralString, Name
+      Numeral, LiteralString, Name, Space
 
 local dquoted, squoted
+
+-- span(rep(space), ";", rep(space)) % function(a, v) return a or i == 2 and v end
+
+local second = function(a, b, i)
+  if i == 2 then
+    return b
+  end
+  return a
+end
+
+local spaces = {
+  [(" "):byte()] = true,
+  [("\t"):byte()] = true,
+  [("\r"):byte()] = true,
+  [("\n"):byte()] = true,
+}
+
+local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
+local zero, nine = 48, 57
+
+local function isalphanumeric(byte)
+  return byte and (byte == underscore or byte >= alpha and byte <= zeta or
+    byte >= ALPHA and byte <= ZETA or byte >= zero and byte <= nine)
+end
+
+local function isalpha(byte)  
+  return byte and (byte == underscore or byte >= alpha and byte <= zeta or
+    byte >= ALPHA and byte <= ZETA)
+end
+
+local function spacing(invariant, position, previous, current)
+  local src = invariant.src
+  local byte = src:byte(position)
+
+  -- Skip whitespaces.
+  local rest = position
+  while spaces[byte] do
+    rest = rest + 1
+    byte = src:byte(rest)
+  end
+
+  -- Check for required whitespace between two alphanumeric nonterminals.
+  if rest == position and getmetatable(previous) == term then
+    if isalphanumeric(src:byte(position-1)) and isalphanumeric(byte) then
+      return
+    end
+  end
+
+  -- Return advanced cursor.
+  return rest
+end
+
+local function span(...)
+  -- Apply spacing rule to all spans we use in the Lua grammar.
+  return grammar.span(...) ^ spacing
+end
 
 Chunk = factor("Chunk", function() return
   Block end)
@@ -196,23 +252,21 @@ end
 local keywords = {
   ["return"] = true
 }
-Name = function(invariant, position, limit, peek)
+
+Name = function(invariant, position, expect, peek)
   local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
   local zero, nine = 48, 57
   local src = invariant.src
-  limit = limit or #src
   local byte = src:byte(position)
 
-  if not (byte == underscore or byte >= alpha and byte <= zeta or byte >= ALPHA
-      and byte <= ZETA) then
+  if not isalpha(byte) then
     return nil
   end
 
   local rest = position + 1
-  for i=position+1, limit do
+  for i=position+1, #src do
     byte = src:byte(i)
-    if not (byte == underscore or byte >= alpha and byte <= zeta or
-        byte >= ALPHA and byte <= ZETA or byte >= zero and byte <= nine) then
+    if not isalphanumeric(byte) then
       break
     end
     rest = i + 1
@@ -220,7 +274,7 @@ Name = function(invariant, position, limit, peek)
 
   local value = src:sub(position, rest-1)
 
-  if keywords[value] then
+  if keywords[value] or (expect and expect ~= rest) then
     return
   end
 

@@ -177,6 +177,13 @@ function tests.lua_args2_parse_success()
   return {rest}, {#src + 1}
 end
 
+function tests.lua_functioncall0_parse_success()
+  local src = 'print(1)'
+  local rest, values = lua.FunctionCall(
+    {src=src}, 1, nil, true)
+  return {rest}, {#src + 1}
+end
+
 function tests.lua_functioncall_parse_success()
   local src = 'print(1)'
   local rest, values = lua.FunctionCall({src=src}, 1, nil)
@@ -187,21 +194,26 @@ end
 function tests.lua_functioncall2_parse_success()
   local src = 'a()()'
   local rest, values = lua.FunctionCall({src=src}, 1, nil)
-
-  return {rest, values[1][1], values[1][2][1], values[1][2][3], values[2][1],
-    values[2][3]}, {#src + 1, "a", "(", ")", "(", ")"}
+  return {rest}, {#src+1}
+  -- return {rest, values[1][1], values[1][2][1], values[1][2][3], values[2][1],
+  --   values[2][3]}, {#src + 1, "a", "(", ")", "(", ")"}
 end
 
 function tests.lua_retstat_parse_success()
-  local src = 'return(1+1)'
+  local src = 'return (1+1)'
   local rest, values = lua.RetStat({src=src}, 1, nil, true)
   return {rest, unpack(values or {})}, {#src + 1}
 end
 
+function tests.lua_retstat_parse_failure()
+  local src = 'returntrue'
+  return {lua.RetStat({src=src}, 1, nil, true)}, {nil}
+end
+
 function tests.lua_block_parse_success()
-  local src = 'print(1);return(1)'
+  local src = 'print(1);return true'
   lua.Block:setup()
-  local rest, values = lua.Block.canon({src=src}, 1, nil, true)
+  local rest, values = lua.Block({src=src}, 1, nil, true)
   return {rest, unpack(values or {})}, {#src + 1}
 end
 
@@ -216,6 +228,28 @@ function tests.lua_search_nonterminal_binop()
   return {traits.search_left_nonterminal(lua.BinOp.canonize(),
     lua.BinOp)}, {nil}
 end
+
+function tests.lua_exp()
+  local src = 'b()'
+  local rest, values = lua.PrefixExp({src=src}, 1, nil, true)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_functioncall_skip()
+  local src = 'a()'
+  local rest, values = lua.PrefixExp({src=src}, 1, nil, true)
+  return {rest}, {#src + 1}
+end
+
+-- function tests.lua_big_parse()
+--   local f = io.open("test.lua")
+--   local invariant = {src=f:read("*all")}
+--   f.close()
+
+--   local rest = lua.Chunk(invariant, 1)
+
+--   return {}, {}
+-- end
 
 local function compare(actual, expected)
   assert(actual) assert(expected)

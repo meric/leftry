@@ -12,12 +12,17 @@ local torepresentation = utils.torepresentation
 local search_left_nonterminal = utils.search_left_nonterminal
 
 
+local term = require("bnf.elements.term")
 local span = prototype("span", function(self, ...)
   assert(select("#", ...) > 1, "span must consist of two or more elements.")
   return setmetatable({dotmap(termize, ...)}, self)
 end)
 
-function span.reducer(initial, value, self, position, rest, i)
+function span:__pow(separator)
+  return rawset(self, "separator", separator)
+end
+
+function span.reducer(initial, value, i, self, position, rest)
   return rawset(initial or {}, i, value)
 end
 
@@ -47,23 +52,29 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
   end
   for i=first, #self do 
     local value
-    local sub = rest
+    local sub = rest or position
     if i > 1 then
       skip = nil
     end
     if i ~= 1 then
       given_rest, given_value = nil, nil
     end
-    rest, value = self[i](invariant, rest, nil, peek, exclude, skip,
+    rest, value = self[i](invariant, sub, nil, peek, exclude, skip,
       given_rest, given_value)
     if not rest then
       return nil
     end
     if not peek then
-      values = reducer(values, value, self, sub, rest, i)
+      values = reducer(values, value, i, self, sub, rest)
+    end
+    if rest and self.separator then
+      rest = self.separator(invariant, rest, self[i], self[i+1])
+      if not rest then
+        return nil
+      end
     end
   end
-  if expect and rest ~= expect then
+  if expect and rest ~= expect or rest == position then
     return
   end
   return rest, values

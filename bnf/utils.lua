@@ -52,7 +52,9 @@ local function keys(t)
   for key, _ in pairs(t) do
     table.insert(k, key)
   end
-  table.sort(k)
+  table.sort(k, function(a, b)
+    return tostring(a) < tostring(b)
+  end)
   return k
 end
 

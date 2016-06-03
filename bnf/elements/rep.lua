@@ -12,7 +12,7 @@ function rep:__tostring()
   return torepresentation(rep, {self.element})
 end
 
-function rep.reducer(initial, value, self, position, rest, i)
+function rep.reducer(initial, value, i, self, position, rest)
   return rawset(initial or {}, i, value)
 end
 
@@ -23,13 +23,13 @@ end
 function rep:__call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
   local initial
-  local rest = position
+  local rest
   local element = self.element
   local i = 1
   while true do
-    local sub = rest
+    local sub = rest or position
     if sub > #invariant.src then
-      return rest, initial
+      return sub, initial
     end
     rest, value = element(invariant, sub, limit, peek, exclude, skip,
       given_rest, given_value)
@@ -37,7 +37,7 @@ function rep:__call(invariant, position, expect, peek, exclude, skip,
       return sub, initial
     end
     if not peek then
-      initial = self.reducer(initial, value, self, sub, rest, i)
+      initial = self.reducer(initial, value, i, self, sub, rest)
       i = i + 1
     end
   end

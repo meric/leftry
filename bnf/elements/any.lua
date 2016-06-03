@@ -37,17 +37,19 @@ function any:__call(invariant, position, expect, peek, exclude, skip)
     self:index()
   end
   local lookahead = self.lookahead
-  local rest = position
+  local rest
   local value
   local alternatives = lookahead[invariant.src:byte(position)]
   local alternative
   for i=1, #alternatives do
-    -- Note: A `rep` element in `any` acts like a non-optional element.
-    rest, value = alternatives[i](invariant, position, expect, peek, exclude,
-      skip)
-    if rest and rest ~= sub then
-      alternative = i
-      break
+    if not exclude or not exclude[alternatives[i]] then
+      -- Note: A `rep` element in `any` acts like a non-optional element.
+      rest, value = alternatives[i](invariant, position, expect, peek, exclude,
+        skip)
+      if rest and rest ~= sub then
+        alternative = i
+        break
+      end
     end
   end
   return rest, value, alternative

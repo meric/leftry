@@ -61,18 +61,20 @@ function factor:wrap(invariant, position, expect, peek, exclude, skip)
   return rest, value
 end
 
-function factor:measure(invariant, rest, expect)
+function factor:measure(invariant, rest, expect, exclude)
   local sections
   local final
   local limit = #invariant.src
   while limit >= rest do
     local position = rest
     for i=1, #self.canon do
-      if search_left_nonterminal(self.canon[i], self) then
+      if search_left_nonterminal(self.canon[i], self)
+          and (not exclude or not exclude[self.canon[i]]) then
         local skip = set(traits.left_nonterminals(self))
         skip[self] = true
-        rest = self.canon[i](invariant, position, expect, true, nil, skip)
-        if rest then
+        local alternative = self.canon[i]
+        rest = alternative(invariant, position, expect, true, nil, skip)
+        if rest and rest ~= position then
           final = rest
           break
         end
@@ -96,8 +98,6 @@ function factor.trace(top, invariant, skip, sections)
   while index > 0 do
     local section = sections[index]
     local position, expect = section.position, section.expect
-
-    -- print(position, expect, invariant.src, top.canon, skip)
     local rest, _, choice = top.canon(invariant, position, expect, true,
       exclude, skip)
     assert(rest)
@@ -119,8 +119,15 @@ function factor.trace(top, invariant, skip, sections)
   return top, paths
 end
 
+-- function factor:prefix(invariant, position, exclude)
+--   for i=1, choice in ipairs(self.canon) do
+
+--   end
+-- end
+
 function factor:left(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
+  local span = require("bnf.elements.span")
   if given_rest then
     if expect and expect ~= given_rest then
       return
@@ -132,6 +139,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     return
   end
 
+  local orig_exclude = exclude
   if not exclude or not exclude[self] then
     exclude = rawset(copy(exclude or {}), self, true)
   end
@@ -139,11 +147,18 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
     position, nil, peek, exclude)
 
+  if prefix_rest and getmetatable(self.canon[prefix_choice]) == span then
+    if search_left_nonterminal(self.canon, self.canon[prefix_choice][1]) then
+      prefix_rest, prefix_value = self.canon[prefix_choice][1](invariant,
+        position, nil, peek, exclude)
+    end
+  end
+
   if not prefix_rest then
     return
   end
 
-  local rest, sections = self:measure(invariant, prefix_rest, expect)
+  local rest, sections = self:measure(invariant, prefix_rest, expect, orig_exclude)
 
   if expect and (rest or prefix_rest) ~= expect then
     return
@@ -166,11 +181,6 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
   while getmetatable(top) == factor do
     local _, __, choice = top.canon(invariant, position, prefix_rest, true)
     assert(choice and _ == prefix_rest)
-
-    -- we want  limit to act as minimum here. floor.
-    -- change limit to rest. instead of doing position > limit, 
-    -- we do position > #invariant.src and not limit or rest == limit
-    -- rename limit to expect
     table.insert(paths, {choice=choice, expect=prefix_rest, nonterminal=top})
     top = top.canon[choice]
   end
@@ -182,7 +192,6 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     local alternative = top.canon[path.choice]
     if i == #paths then
       rest, value = alternative(invariant, position, path.expect, peek)
-      -- print(rest, value)
     else
       rest, value = alternative(invariant, position, path.expect, peek,
         nil, nil, paths[i+1].expect, value)
@@ -209,6 +218,10 @@ end
 
 function factor:__call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
+  if skip and skip[self] then
+    return self:alias(invariant, position, expect, peek, exclude, skip,
+      given_rest, given_value)
+  end
   return self:call(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
 end
