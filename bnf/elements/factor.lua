@@ -62,6 +62,9 @@ function factor:wrap(invariant, position, expect, peek, exclude, skip)
 end
 
 function factor:measure(invariant, rest, expect, exclude)
+  if expect == rest then
+    return
+  end
   local sections
   local final
   local limit = #invariant.src
@@ -73,25 +76,32 @@ function factor:measure(invariant, rest, expect, exclude)
         local skip = set(traits.left_nonterminals(self))
         skip[self] = true
         local alternative = self.canon[i]
-        rest = alternative(invariant, position, expect, true, nil, skip)
-        if rest and rest ~= position then
+        rest = alternative(invariant, position, nil, true, nil, skip)
+        if rest and rest ~= position or (expect and rest == expect) then
           final = rest
           break
         end
       end
     end
-    if not rest or position == rest or (expect and rest == expect) then
+    if not rest or position == rest then
       break
     end
     if not sections then
       sections = {}
     end
     table.insert(sections, {position=position, expect=rest})
+    if expect and rest == expect then
+      break
+    end
+  end
+  if final then
+    assert(final == sections[#sections].expect)
   end
   return final, sections
 end
 
 function factor.trace(top, invariant, skip, sections)
+
   local span = require("bnf.elements.span")
   local index = #sections
   local paths = {}
@@ -102,7 +112,6 @@ function factor.trace(top, invariant, skip, sections)
       exclude, skip)
     assert(rest)
     local alternative = top.canon[choice]
-
     table.insert(paths, {choice=choice, expect=expect, nonterminal=top})
 
     if getmetatable(alternative) ~= factor then
@@ -171,6 +180,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     return
   end
 
+  local paths_length = #paths
   while getmetatable(top) == factor do
     local _, __, choice = top.canon(invariant, position, prefix_rest, true)
     if not choice or _ ~= prefix_rest then
@@ -180,12 +190,15 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     top = top.canon[choice]
   end
 
+  if paths_length == #paths then
+    error("cannot find prefix")
+  end
+
   local rest, value
   for i=#paths, 1, -1 do
     local path = paths[i]
     local top = path.nonterminal
     local alternative = top.canon[path.choice]
-
     if i == #paths then
       rest, value = alternative(invariant, position, path.expect, peek)
     else

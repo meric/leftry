@@ -314,12 +314,33 @@ function tests.lua_big_function()
   return {rest}, {#src + 1}
 end
 
+function tests.lua_function3()
+  local src = [[a.b.c()]]
+  local rest, values = lua.PrefixExp({src=src}, 1, nil)
+  return {rest}, {#src + 1}
+end
+
+
+function tests.lua_var()
+  local src = [[a.b.c]]
+  local rest, values = lua.Var({src=src}, 1, #src + 1)
+  return {rest}, {#src + 1}
+end
+
+function tests.lua_var0()
+  local src = [[a.b.c]]
+  lua.PrefixExp:setup()
+  local rest, values = lua.PrefixExp.canon({src=src}, 1, 2, true)
+  return {rest}, {2}
+end
+
+
 function tests.lua_big_parse()
   local f = io.open("test.lua")
   local invariant = {src=f:read("*all")}
   f.close()
 
-  local rest = lua.Chunk(invariant, 1, nil, true)
+  local rest = lua.Chunk(invariant, 1, nil)
 
   print(invariant.src:sub(rest, rest+100))
   return {rest}, {#invariant.src + 1}
