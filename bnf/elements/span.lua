@@ -18,8 +18,11 @@ local span = prototype("span", function(self, ...)
   return setmetatable({dotmap(termize, ...)}, self)
 end)
 
-function span:__pow(separator)
-  return rawset(self, "separator", separator)
+function span:__pow(options)
+  for k, v in pairs(options) do
+    self[k] = v
+  end
+  return self
 end
 
 function span.reducer(initial, value, i, self, position, rest)
@@ -51,8 +54,8 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
     first = first + 1
   end
 
-  if self.separator then
-    rest = self.separator(invariant, rest, nil, self[1])
+  if self.spacing then
+    rest = self.spacing(invariant, rest, nil, self[1])
   end
 
   for i=first, #self do 
@@ -73,8 +76,8 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
     if not peek then
       values = reducer(values, value, i, self, sub, rest)
     end
-    if rest and self.separator then
-      rest = self.separator(invariant, rest, self[i], self[i+1])
+    if rest and self.spacing then
+      rest = self.spacing(invariant, rest, self[i], self[i+1])
       if not rest then
         return nil
       end

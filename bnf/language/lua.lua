@@ -118,14 +118,13 @@ local function spacing(invariant, position, previous, current)
     end
   end
 
-
   -- Return advanced cursor.
   return rest
 end
 
 local function span(...)
   -- Apply spacing rule to all spans we use in the Lua grammar.
-  return grammar.span(...) ^ spacing
+  return grammar.span(...) ^ {spacing=spacing, spaces=" \t\r\n"}
 end
 
 Chunk = factor("Chunk", function() return

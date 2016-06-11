@@ -338,11 +338,12 @@ end
 function tests.lua_big_parse()
   local f = io.open("test.lua")
   local invariant = {src=f:read("*all")}
+  -- invariant.src = invariant.src:rep(20)
   f.close()
 
   local rest = lua.Chunk(invariant, 1, nil)
 
-  print(invariant.src:sub(rest, rest+100))
+  -- print(invariant.src:sub(rest, rest+100))
   return {rest}, {#invariant.src + 1}
 end
 
@@ -353,7 +354,7 @@ function tests.lua_big_parse2()
 
   local rest = lua.Chunk(invariant, 1, nil, true)
 
-  print(invariant.src:sub(rest, rest+100))
+  -- print(invariant.src:sub(rest, rest+100))
   return {rest}, {#invariant.src + 1}
 end
 

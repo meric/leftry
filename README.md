@@ -110,6 +110,17 @@ BNF.lua can handle some examples of left recursion.
   end)
   ```
 
+  The span element can also be
+  assigned a spacing rule using the `^` operator. See built-in Lua parser
+  for an example on how to apply the spacing function:
+
+  ```
+  local function span(...)
+    -- Apply spacing rule to all spans we use in the Lua grammar.
+    return grammar.span(...) ^ {spacing=spacing, spaces=" \t\r\n"}
+  end
+  ```
+
 * `term(literal, [initializer])`
 
   Create a literal element.
@@ -200,8 +211,8 @@ The current implementation does not enforce the following rules properly.
 
 1. A `span` must have more than one child.
 2. In a left recursion alternative, only the first element may be the
-   left-recurring non-terminal. There cannot be more than one consecutive
-   left-recurring non-terminal.
+   left-recurring non-terminal. More than one consecutive left-recurring
+   non-terminal is not supported, even if it currently works.
 
    ```
    -- This is OK

@@ -1,6 +1,7 @@
 local utils = require("bnf.utils")
 local termize = require("bnf.elements.utils").termize
-local hash = require("bnf.elements.traits.hash")
+local traits = require("bnf.elements.traits")
+local hash = traits.hash
 
 local prototype = utils.prototype
 local dotmap = utils.dotmap
@@ -17,10 +18,12 @@ end
 
 function any:index()
   self.lookahead = {}
+  self.reverse = {}
   for i=1, 255 do
     self.lookahead[i] = {}
   end
   for i=1, #self do
+    self.reverse[self[i]] = i
     local h = {hash(self[i])}
     for j=1, #h do
       table.insert(self.lookahead[h[j]], self[i])
@@ -29,7 +32,8 @@ function any:index()
 end
 
 local function willskip(skip, alternative)
-  local search_left_nonterminal = require("bnf.elements.traits").search_left_nonterminal
+  local traits = require("bnf.elements.traits")
+  local search_left_nonterminal = traits.search_left_nonterminal
   for nonterminal in pairs(skip) do
     if search_left_nonterminal(alternative, nonterminal) then
       return true
@@ -57,7 +61,7 @@ function any:__call(invariant, position, expect, peek, exclude, skip)
         rest, value = alternatives[i](invariant, position, expect, peek,
           exclude, skip)
         if rest and rest ~= sub then
-          alternative = i
+          alternative = self.reverse[alternatives[i]]
           break
         end
       end

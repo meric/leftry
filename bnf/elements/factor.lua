@@ -34,7 +34,8 @@ function factor:setup()
     end
     self.canon = self:canonize()
   end
-  self.setup = function() end
+  self.setup = function() return self.canon end
+  return self.canon
 end
 
 function factor:actualize()
