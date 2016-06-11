@@ -62,21 +62,22 @@ function factor:wrap(invariant, position, expect, peek, exclude, skip)
   return rest, value
 end
 
-function factor:measure(invariant, rest, expect, exclude)
+function factor:measure(invariant, rest, expect, exclude, skip)
   if expect == rest then
     return
   end
   local sections
+  local n = 0
   local final
   local limit = #invariant.src
-  local skip = traits.left_nonterminals(self)
+  local canon = self.canon
 
   while limit >= rest do
     local position = rest
-    for i=1, #self.canon do
-      if search_left_nonterminal(self.canon[i], self)
-          and (not exclude or not exclude[self.canon[i]]) then
-        local alternative = self.canon[i]
+    for i=1, #canon do
+      local alternative = canon[i]
+      if search_left_nonterminal(alternative, self)
+          and (not exclude or not exclude[alternative]) then
         rest = alternative(invariant, position, nil, true, nil, skip)
         if rest and rest ~= position or (expect and rest == expect) then
           final = rest
@@ -132,6 +133,8 @@ function factor.trace(top, invariant, skip, sections)
   return top, paths
 end
 
+local exclude_cache = {}
+
 function factor:left(invariant, position, expect, peek, exclude, skip,
     given_rest, given_value)
   local span = require("bnf.elements.span")
@@ -147,9 +150,32 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
   end
 
   local orig_exclude = exclude
-  if not exclude or not exclude[self] then
-    exclude = rawset(copy(exclude or {}), self, true)
+  if not exclude then
+    local t = exclude_cache[self]
+    if not t then
+      t = {[self]=true}
+      exclude_cache[self] = t
+    end
+    exclude = t
+  elseif not exclude[self] then
+    local t = exclude_cache[exclude]
+    if not t then
+      exclude_cache[exclude] = {}
+    end
+    t = exclude_cache[exclude][self]
+    if not t then
+      t = rawset(copy(exclude or {}), self, true)
+      exclude_cache[exclude][self] = t
+    end
+    exclude = t
   end
+
+  -- The above is the memoized version of the following:
+  -- ```
+  -- if not exclude or not exclude[self] then
+  --   exclude = rawset(copy(exclude or {}), self, true)
+  -- end
+  -- ```
 
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
     position, nil, peek, exclude)
@@ -158,8 +184,9 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     return
   end
 
+  local skip = left_nonterminals(self)
   local rest, sections = self:measure(invariant, prefix_rest, expect,
-    orig_exclude)
+    orig_exclude, skip)
 
   if expect and (rest or prefix_rest) ~= expect then
     return
@@ -173,9 +200,6 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     return prefix_rest, self.initializer(
       prefix_value, self, position, prefix_rest, prefix_choice)
   end
-
-  skip = rawset(copy(skip or {}, traits.left_nonterminals(self)), self,
-    true)
 
   local top, paths = self:trace(invariant, skip, sections)
 

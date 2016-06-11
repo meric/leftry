@@ -8,6 +8,8 @@ local dotmap = utils.dotmap
 
 local torepresentation = utils.torepresentation
 
+local search_left_nonterminal = traits.search_left_nonterminal
+
 local any = prototype("any", function(self, ...)
   return setmetatable({dotmap(termize, ...)}, self)
 end)
@@ -31,14 +33,24 @@ function any:index()
   end
 end
 
-local function willskip(skip, alternative)
-  local traits = require("bnf.elements.traits")
-  local search_left_nonterminal = traits.search_left_nonterminal
-  for nonterminal in pairs(skip) do
-    if search_left_nonterminal(alternative, nonterminal) then
-      return true
-    end
+local cache = {}
+
+local function skipping(skip, alternative)
+  if not cache[skip] then
+    cache[skip] = {}
   end
+  local value = cache[skip][alternative]
+  if value == nil then
+    cache[skip][alternative] = false
+    for nonterminal in pairs(skip) do
+      if search_left_nonterminal(alternative, nonterminal) then
+        cache[skip][alternative] = true
+        return true
+      end
+    end
+    return false
+  end
+  return cache[skip][alternative]
 end
 
 function any:__call(invariant, position, expect, peek, exclude, skip)
@@ -57,7 +69,7 @@ function any:__call(invariant, position, expect, peek, exclude, skip)
   for i=1, #alternatives do
     if not exclude or not exclude[alternatives[i]] then
       -- Note: A `rep` element in `any` acts like a non-optional element.
-      if not skip or willskip(skip, alternatives[i]) then
+      if not skip or skipping(skip, alternatives[i]) then
         rest, value = alternatives[i](invariant, position, expect, peek,
           exclude, skip)
         if rest and rest ~= sub then

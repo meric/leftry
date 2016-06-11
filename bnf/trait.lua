@@ -28,7 +28,7 @@ function trait:__call(this, ...)
     local n = self.memoize[mt]
     local i = select("#", ...)
     if n == 1 and i == 0 then
-      local attr = "_"..tostring(self)
+      local attr = "_"..self.name
       local cache = this[attr]
       if cache ~= nil then
         return cache
@@ -36,7 +36,7 @@ function trait:__call(this, ...)
       rawset(this, attr, self[mt](this, ...))
       return this[attr]
     elseif n == 2 and i == 1 then
-      local attr = "_"..tostring(self)
+      local attr = "_"..self.name
       local cache = this[attr] or rawset(this, attr, {})
       local param = ...
       local value = cache[param]
