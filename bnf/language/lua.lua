@@ -351,4 +351,7 @@ return {
   UnOp=UnOp,
   Numeral=Numeral,
   LiteralString=LiteralString,
-  Name=Name}
+  Name=Name,
+  Space=Space,
+  Comment=Comment,
+  LongString=LongString}
