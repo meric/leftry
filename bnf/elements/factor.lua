@@ -69,13 +69,13 @@ function factor:measure(invariant, rest, expect, exclude)
   local sections
   local final
   local limit = #invariant.src
+  local skip = traits.left_nonterminals(self)
+
   while limit >= rest do
     local position = rest
     for i=1, #self.canon do
       if search_left_nonterminal(self.canon[i], self)
           and (not exclude or not exclude[self.canon[i]]) then
-        local skip = traits.left_nonterminals(self)
-        skip[self] = true
         local alternative = self.canon[i]
         rest = alternative(invariant, position, nil, true, nil, skip)
         if rest and rest ~= position or (expect and rest == expect) then
@@ -90,28 +90,30 @@ function factor:measure(invariant, rest, expect, exclude)
     if not sections then
       sections = {}
     end
-    table.insert(sections, {position=position, expect=rest})
+    table.insert(sections, position)
+    table.insert(sections, rest)
     if expect and rest == expect then
       break
     end
   end
-  if final then
-    assert(final == sections[#sections].expect)
-  end
+  -- if final then
+  --   assert(final == sections[#sections].expect)
+  -- end
   return final, sections
 end
 
 function factor.trace(top, invariant, skip, sections)
 
   local span = require("bnf.elements.span")
-  local index = #sections
+  local index = #sections/2
   local paths = {}
   while index > 0 do
-    local section = sections[index]
-    local position, expect = section.position, section.expect
+    local position = sections[index*2-1]
+    local expect   = sections[index*2]
+    -- local position, expect = section.position, section.expect
     local rest, _, choice = top.canon(invariant, position, expect, true,
       exclude, skip)
-    assert(rest)
+    -- assert(rest)
     local alternative = top.canon[choice]
     table.insert(paths, {choice=choice, expect=expect, nonterminal=top})
 
@@ -124,7 +126,7 @@ function factor.trace(top, invariant, skip, sections)
     else
       top = alternative
     end
-    assert(getmetatable(top) == factor)
+    -- assert(getmetatable(top) == factor)
   end
 
   return top, paths

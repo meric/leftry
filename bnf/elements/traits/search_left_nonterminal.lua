@@ -44,8 +44,8 @@ end, 2)
 
 search_left_nonterminal:where(opt, function(self, target, seen)
   return search_left_nonterminal(self.element, target, seen)
-end)
+end, 2)
 
 search_left_nonterminal:where(rep, function(self, target, seen)
   return search_left_nonterminal(self.element, target, seen)
-end)
+end, 2)

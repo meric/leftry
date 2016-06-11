@@ -19,8 +19,10 @@ local span = prototype("span", function(self, ...)
 end)
 
 function span:__pow(options)
+  -- Apply white spacing rule.
   for k, v in pairs(options) do
     self[k] = v
+    assert(k == "spacing" or k == "spaces")
   end
   return self
 end
@@ -47,6 +49,11 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
   local values
   local first = 1
   if skip and skip[self[1]] then
+    -- A skip argument means we want to run an alternative beginning with
+    -- a left nonterminal that appears in the skip table, and then parse
+    -- by skipping that left nonterminal.
+    -- If this span does not fit that criteria, we should abort.
+    -- Otherwise, we begin parsing by skipping the first element.
     if getmetatable(self[1]) ~= factor and 
         not search_left_nonterminal(self[1], self[1]) then
       return
@@ -55,6 +62,7 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
   end
 
   if self.spacing then
+    -- Apply spacing rule at beginning of span.
     rest = self.spacing(invariant, rest, nil, self[1])
   end
 
@@ -77,6 +85,7 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
       values = reducer(values, value, i, self, sub, rest)
     end
     if rest and self.spacing then
+      -- Apply spacing rule between each element.
       rest = self.spacing(invariant, rest, self[i], self[i+1])
       if not rest then
         return nil
