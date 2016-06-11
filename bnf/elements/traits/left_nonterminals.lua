@@ -19,7 +19,7 @@ left_nonterminals:where(factor, function(self, stack)
 
   stack = stack or {}
 
-  if contains(stack, self) then
+  if stack[self] then
     return stack
   end
 
@@ -27,7 +27,7 @@ left_nonterminals:where(factor, function(self, stack)
     return {}
   end
 
-  table.insert(stack, 1, self)
+  stack[self] = true
 
   for i=1, #self.canon do
     if search_left_nonterminal(self.canon[i], self) then
@@ -36,7 +36,7 @@ left_nonterminals:where(factor, function(self, stack)
   end
 
   return stack
-end)
+end, 1)
 
 left_nonterminals:where("function", function() return {} end)
 
@@ -56,4 +56,4 @@ left_nonterminals:where(span, function(self, stack)
     return left_nonterminals(self[1], stack)
   end
   return {}
-end)
+end, 1)

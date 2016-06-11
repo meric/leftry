@@ -225,7 +225,7 @@ end
 function tests.lua_search_nonterminal_binop()
   lua.BinOp:setup()
   return {traits.search_left_nonterminal(lua.BinOp.canonize(),
-    lua.BinOp)}, {nil}
+    lua.BinOp)}, {false}
 end
 
 function tests.lua_exp()

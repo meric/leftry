@@ -73,7 +73,7 @@ function factor:measure(invariant, rest, expect, exclude)
     for i=1, #self.canon do
       if search_left_nonterminal(self.canon[i], self)
           and (not exclude or not exclude[self.canon[i]]) then
-        local skip = set(traits.left_nonterminals(self))
+        local skip = traits.left_nonterminals(self)
         skip[self] = true
         local alternative = self.canon[i]
         rest = alternative(invariant, position, nil, true, nil, skip)
@@ -171,7 +171,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
       prefix_value, self, position, prefix_rest, prefix_choice)
   end
 
-  skip = rawset(copy(skip or {}, set(traits.left_nonterminals(self))), self,
+  skip = rawset(copy(skip or {}, traits.left_nonterminals(self)), self,
     true)
 
   local top, paths = self:trace(invariant, skip, sections)
