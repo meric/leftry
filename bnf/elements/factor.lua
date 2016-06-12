@@ -132,7 +132,6 @@ local exclude_cache = {}
 
 function factor:left(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
-  local span = require("bnf.elements.span")
   if given_rest then
     if expect and expect ~= given_rest then
       return
@@ -214,8 +213,10 @@ end
 
 function factor:call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
-  self:setup()
-  self:actualize()
+  if not self.canon then
+    self:setup()
+    self:actualize()
+  end
   if search_left_nonterminal(self.canon, self) then
     self.call = self.left
   elseif self.initializer ~= factor.initializer then
