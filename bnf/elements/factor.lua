@@ -87,28 +87,25 @@ function factor:measure(invariant, rest, exclude, skip)
     end
     if not rest or position == rest then
       break
+    elseif not sections then
+      sections = {position, rest}
+    else
+      table.insert(sections, position)
+      table.insert(sections, rest)  
     end
-    if not sections then
-      sections = {}
-    end
-    table.insert(sections, position)
-    table.insert(sections, rest)
   end
   return final, sections
 end
 
 function factor.trace(top, invariant, skip, sections)
-
   local span = require("bnf.elements.span")
   local index = #sections/2
   local paths = {}
   while index > 0 do
     local position = sections[index*2-1]
     local expect   = sections[index*2]
-    -- local position, expect = section.position, section.expect
     local rest, _, choice = top.canon(invariant, position, expect, true,
       exclude, skip)
-    -- assert(rest)
     local alternative = top.canon[choice]
     table.insert(paths, {choice=choice, expect=expect, nonterminal=top})
 
