@@ -198,7 +198,7 @@ LiteralString = factor("LiteralString", function() return
   LongString end)
 
 long_string_quote = grammar.span("[", rep("="), "[")
-LongString = function(invariant, position, peek, expect)
+LongString = function(invariant, position, peek)
   local rest = long_string_quote(invariant, position, true)
   if not rest then
     return
@@ -219,7 +219,7 @@ end
 
 -- Functions
 local function stringcontent(quotechar)
-  return function(invariant, position, expect)
+  return function(invariant, position)
     local src = invariant.src
     local limit = #src
     if position > limit then
@@ -252,10 +252,9 @@ end
 dquoted = stringcontent("\"")
 squoted = stringcontent("\'")
 
-Numeral = function(invariant, position, peek, limit)
+Numeral = function(invariant, position, peek)
   local sign, numbers = position
   local src = invariant.src
-  limit = limit or #src
   local byte = src:byte(position)
   local dot, zero, nine, minus = 46, 48, 57, 45
   if byte == minus then
@@ -263,15 +262,15 @@ Numeral = function(invariant, position, peek, limit)
   end
   local decimal = false
   local rest
-  for i=sign, limit do
+  for i=sign, #src do
     local byte = src:byte(i)
     if i ~= sign and byte == dot and decimal == false then
       decimal = true
     elseif not (byte >= zero and byte <= nine) then
       rest = i
       break
-    elseif i == limit then
-      rest = limit + 1
+    elseif i == #src then
+      rest = #src + 1
     end
   end
   if rest == position or rest == sign then
@@ -292,7 +291,7 @@ local keywords = {
   ["not"] = true
 }
 
-Name = function(invariant, position, peek, expect)
+Name = function(invariant, position, peek)
   local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
   local zero, nine = 48, 57
   local src = invariant.src
@@ -313,7 +312,7 @@ Name = function(invariant, position, peek, expect)
 
   local value = src:sub(position, rest-1)
 
-  if keywords[value] or (expect and expect ~= rest) then
+  if keywords[value] then
     return
   end
 
