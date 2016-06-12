@@ -27,7 +27,7 @@ function rep:__call(invariant, position, peek)
   local i = 1
   while true do
     local sub = rest or position
-    if sub > #invariant.src then
+    if sub > #invariant then
       return sub, initial
     end
     rest, value = element(invariant, sub, peek)

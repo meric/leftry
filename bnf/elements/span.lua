@@ -41,7 +41,7 @@ end
 
 function span:__call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
-  if position > #invariant.src or (exclude and exclude[self[1]]) then
+  if position > #invariant or (exclude and exclude[self[1]]) then
     return nil
   end
   local rest = position

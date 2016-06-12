@@ -1,6 +1,5 @@
 local grammar = require("bnf.grammar")
 local traits = require("bnf.elements.traits")
-local utils = require("bnf.utils")
 local set = require("bnf.immutable.set")
 
 local set_insert, set_empty = set.insert, set.empty
@@ -11,8 +10,6 @@ local opt = grammar.opt
 local rep = grammar.rep
 local term = grammar.term
 local factor = grammar.factor
-
-local contains = utils.contains
 
 local search_left_nonterminal = traits.search_left_nonterminal
 local left_nonterminals = traits.left_nonterminals

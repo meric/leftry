@@ -72,7 +72,7 @@ function factor:measure(invariant, rest, exclude, skip)
   local sections
   local n = 0
   local final
-  local limit = #invariant.src
+  local limit = #invariant
   local recursions = self.recursions
 
   while limit >= rest do
@@ -139,7 +139,7 @@ function factor:left(invariant, position, peek, expect, exclude, skip,
     return given_rest, given_value
   end
 
-  if position > #invariant.src then
+  if position > #invariant then
     return
   end
 

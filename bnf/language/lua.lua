@@ -89,14 +89,14 @@ end
 
 Comment = factor("Comment", function() return
   grammar.span("--", function(invariant, position)
-    while invariant.src:sub(position, position) ~= "\n" do
+    while invariant:sub(position, position) ~= "\n" do
       position = position + 1
     end
     return position
   end) end)
 
 local function spacing(invariant, position, previous, current)
-  local src = invariant.src
+  local src = invariant
   local byte = src:byte(position)
 
   -- Skip whitespace and comments
@@ -205,11 +205,11 @@ LongString = function(invariant, position, peek)
   end
   local level = position - rest - 2
   local endquote = "]"..("="):rep(level) .. "]"
-  local endquotestart, endquoteend = invariant.src:find(endquote, rest)
+  local endquotestart, endquoteend = invariant:find(endquote, rest)
   if not endquotestart then
     return
   end
-  local value = invariant.src:sub(rest, endquotestart-1)
+  local value = invariant:sub(rest, endquotestart-1)
   rest = endquoteend + 1
   if peek then
     return rest
@@ -220,7 +220,7 @@ end
 -- Functions
 local function stringcontent(quotechar)
   return function(invariant, position)
-    local src = invariant.src
+    local src = invariant
     local limit = #src
     if position > limit then
       return
@@ -240,7 +240,7 @@ local function stringcontent(quotechar)
       if not escaped then
         table.insert(value, byte)
       end
-      byte = string.char(invariant.src:byte(i))
+      byte = string.char(invariant:byte(i))
       if byte == quotechar and not escaped then
         return i, table.concat(value)
       end
@@ -254,7 +254,7 @@ squoted = stringcontent("\'")
 
 Numeral = function(invariant, position, peek)
   local sign, numbers = position
-  local src = invariant.src
+  local src = invariant
   local byte = src:byte(position)
   local dot, zero, nine, minus = 46, 48, 57, 45
   if byte == minus then
@@ -294,7 +294,7 @@ local keywords = {
 Name = function(invariant, position, peek)
   local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
   local zero, nine = 48, 57
-  local src = invariant.src
+  local src = invariant
   local byte = src:byte(position)
 
   if not isalpha(byte) then

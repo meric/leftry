@@ -26,7 +26,7 @@ function tests.factor_peek_parse_success()
     span(A, "1"), "1"
   end)
   local src = "11"
-  return {A({src=src}, 1, true)}, {#src + 1}
+  return {A(src, 1, true)}, {#src + 1}
 end
 
 function tests.factor_parse_success()
@@ -36,7 +36,7 @@ function tests.factor_parse_success()
     end, "1"
   end)
   local src = "111"
-  return {A({src=src}, 1)}, {#src + 1, "111"}
+  return {A(src, 1)}, {#src + 1, "111"}
 end
 
 function tests.factor_first_third_parse_success()
@@ -46,7 +46,7 @@ function tests.factor_first_third_parse_success()
     end, "1"
   end)
   local src = "1213"
-  return {A({src=src}, 1)}, {#src + 1, "1213"}
+  return {A(src, 1)}, {#src + 1, "1213"}
 end
 
 function tests.factor_first_second_parse_success()
@@ -56,7 +56,7 @@ function tests.factor_first_second_parse_success()
     end, "1"
   end)
   local src = "113"
-  return {A({src=src}, 1)}, {#src + 1, "113"}
+  return {A(src, 1)}, {#src + 1, "113"}
 end
 
 function tests.factor_nested_parse_success()
@@ -67,18 +67,18 @@ function tests.factor_nested_parse_success()
     span(B, "2"), A
   end)
   local src = "11112222"
-  return {B({src=src}, 1, true)}, {#src + 1}
+  return {B(src, 1, true)}, {#src + 1}
 end
 
 function tests.span_opt_parse_success()
   local src = "13"
-  local rest, values = span("1", opt("2"), "3")({src=src}, 1)
+  local rest, values = span("1", opt("2"), "3")(src, 1)
   return {rest, values[1], values[3]}, {#src + 1, "1", "3"}
 end
 
 function tests.span_rep_parse_success()
   local src = "13"
-  local rest, values = span("1", rep("2"), "3")({src=src}, 1)
+  local rest, values = span("1", rep("2"), "3")(src, 1)
   return {rest, values[1], values[3]}, {#src + 1, "1", "3"}
 end
 
@@ -88,26 +88,26 @@ function tests.span_rep1_parse_success()
     span(
       "1",
       rep("2", function(a, b) return (a or "")..b end),
-      "3")({src=src}, 1)
+      "3")(src, 1)
   return {rest, unpack(values or {})}, {#src + 1, "1", "2222", "3"}
 end
 
 function tests.span_parse_success()
   local src = "123"
-  local rest, values = span("1", "2", "3")({src=src}, 1)
+  local rest, values = span("1", "2", "3")(src, 1)
   return {rest, unpack(values or {})}, {#src + 1, "1", "2", "3"}
 end
 
 function tests.span_parse_failure()
   local src = "1"
-  local rest, values = span("1", "2", "3")({src=src}, 1)
+  local rest, values = span("1", "2", "3")(src, 1)
   return {rest, unpack(values or {})}, {nil, nil}
 end
 
 function tests.span_as_iterator()
   local src = "123123123"
   local actual = {}
-  for i, values in span("1", "2", "3"), {src=src}, 1 do
+  for i, values in span("1", "2", "3"), src, 1 do
     table.insert(actual, i)
   end
   return actual, {4, 7, 10}
@@ -115,20 +115,20 @@ end
 
 function tests.any_parse_success()
   local src = "123"
-  local rest, value = any("1", "2", "3")({src=src}, 1)
+  local rest, value = any("1", "2", "3")(src, 1)
   return {rest, value}, {2, "1"}
 end
 
 function tests.any_parse_failure()
   local src = "4123"
-  local rest, value = any("1", "2", "3")({src=src}, 1)
+  local rest, value = any("1", "2", "3")(src, 1)
   return {rest, value}, {nil, nil}
 end
 
 function tests.any_as_iterator()
   local src = "123123123"
   local actual = {}
-  for i, values in any("1", "2", "3"), {src=src}, 1 do
+  for i, values in any("1", "2", "3"), src, 1 do
     table.insert(actual, i)
   end
   return actual, {2, 3, 4, 5, 6, 7, 8, 9, 10}
@@ -136,63 +136,63 @@ end
 
 function tests.lua_string_parse_success()
   local src = '"hello world!"'
-  local rest, values = lua.LiteralString({src=src}, 1)
+  local rest, values = lua.LiteralString(src, 1)
   return {rest, unpack(values or {})}, {#src + 1, '"', "hello world!", '"'}
 end
 
 function tests.lua_exp_parse_success()
   local src = '"hello world!"'
-  local rest, values = lua.Exp({src=src}, 1)
+  local rest, values = lua.Exp(src, 1)
   return {rest, unpack(values or {})}, {#src + 1, '"', "hello world!", '"'}
 end
 
 function tests.lua_exp1_parse_success()
   local src = '1+1'
-  local rest, values = lua.Exp({src=src}, 1)
+  local rest, values = lua.Exp(src, 1)
   return {rest, unpack(values or {})}, {#src + 1, 1, "+", 1}
 end
 
 function tests.lua_var_parse_success()
   local src = 'print'
-  local rest, values = lua.Var({src=src}, 1)
+  local rest, values = lua.Var(src, 1)
   return {rest, values}, {#src + 1, "print"}
 end
 
 function tests.lua_prefixexp_parse_success()
   local src = 'print'
-  local rest, values = lua.PrefixExp({src=src}, 1)
+  local rest, values = lua.PrefixExp(src, 1)
   return {rest, values}, {#src + 1, "print"}
 end
 
 function tests.lua_args_parse_success()
   local src = '(1)'
-  local rest, values = lua.PrefixExp({src=src}, 1)
+  local rest, values = lua.PrefixExp(src, 1)
   return {rest, unpack(values or {})}, {#src + 1, "(", 1, ")"}
 end
 
 function tests.lua_args2_parse_success()
   local src = '()'
-  local rest, values = lua.Args({src=src}, 1, nil)
+  local rest, values = lua.Args(src, 1, nil)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_functioncall0_parse_success()
   local src = 'print(1)'
   local rest, values = lua.FunctionCall(
-    {src=src}, 1, true)
+    src, 1, true)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_functioncall_parse_success()
   local src = 'print(1)'
-  local rest, values = lua.FunctionCall({src=src}, 1)
+  local rest, values = lua.FunctionCall(src, 1)
   return {rest, values[1], values[2][1], values[2][2][1], values[2][3]},
     {#src + 1, "print", "(", 1, ")"}
 end
 
 function tests.lua_functioncall2_parse_success()
   local src = 'a()()'
-  local rest, values = lua.FunctionCall({src=src}, 1)
+  local rest, values = lua.FunctionCall(src, 1)
   return {rest}, {#src+1}
   -- return {rest, values[1][1], values[1][2][1], values[1][2][3], values[2][1],
   --   values[2][3]}, {#src + 1, "a", "(", ")", "(", ")"}
@@ -200,25 +200,25 @@ end
 
 function tests.lua_retstat_parse_success()
   local src = 'return (1+1)'
-  local rest, values = lua.RetStat({src=src}, 1, true)
+  local rest, values = lua.RetStat(src, 1, true)
   return {rest, unpack(values or {})}, {#src + 1}
 end
 
 function tests.lua_retstat_parse_failure()
   local src = 'returntrue'
-  return {lua.RetStat({src=src}, 1, true)}, {nil}
+  return {lua.RetStat(src, 1, true)}, {nil}
 end
 
 function tests.lua_block_parse_success()
   local src = 'print(1);return true'
   lua.Block:setup()
-  local rest, values = lua.Block({src=src}, 1, true)
+  local rest, values = lua.Block(src, 1, true)
   return {rest, unpack(values or {})}, {#src + 1}
 end
 
 function tests.lua_var_parse_failure()
   local src = 'a()'
-  local rest, values = lua.Var({src=src}, 1)
+  local rest, values = lua.Var(src, 1)
   return {rest}, {2}
 end
 
@@ -230,13 +230,13 @@ end
 
 function tests.lua_exp()
   local src = 'b()'
-  local rest, values = lua.PrefixExp({src=src}, 1, true)
+  local rest, values = lua.PrefixExp(src, 1, true)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_stat()
   local src = 'local utils = require("bnf").utils'
-  local rest, values = lua.Stat({src=src}, 1)
+  local rest, values = lua.Stat(src, 1)
   return {rest}, {#src + 1}
 end
 
@@ -245,37 +245,37 @@ function tests.lua_block()
     local utils = require("bnf").utils
     local grammar = require("bnf").grammar
   ]]
-  local rest, values = lua.Block({src=src}, 1)
+  local rest, values = lua.Block(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_table()
   local src = 'local test = {}'
-  local rest, values = lua.Stat({src=src}, 1)
+  local rest, values = lua.Stat(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_function()
   local src =[[function(x) return x end]]
-  local rest, values = lua.Exp({src=src}, 1)
+  local rest, values = lua.Exp(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_function1()
   local src =[[return {function(x) return x + 1 end}]]
-  local rest, values = lua.RetStat({src=src}, 1)
+  local rest, values = lua.RetStat(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_function2()
   local src =[[a.b()]]
-  local rest, values = lua.Exp({src=src}, 1)
+  local rest, values = lua.Exp(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_length()
   local src =[[#src]]
-  local rest, values = lua.Exp({src=src}, 1)
+  local rest, values = lua.Exp(src, 1)
   return {rest}, {#src + 1}
 end
 
@@ -296,7 +296,7 @@ function tests.lua_big_for()
     end
   end
   ]]
-  local rest, values = lua.Stat({src=src}, 1)
+  local rest, values = lua.Stat(src, 1)
   return {rest}, {#src + 1}
 end
 
@@ -304,58 +304,58 @@ function tests.lua_big_function()
   local src = [[
     Comment = factor("Comment", function() return
       grammar.span("--", function(invariant, position)
-        while invariant.src:sub(position, position) ~= "\n" do
+        while invariant:sub(position, position) ~= "\n" do
           position = position + 1
         end
         return position
       end) end)
   ]]
-  local rest, values = lua.Stat({src=src}, 1)
+  local rest, values = lua.Stat(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_function3()
   local src = [[a.b.c()]]
-  local rest, values = lua.PrefixExp({src=src}, 1)
+  local rest, values = lua.PrefixExp(src, 1)
   return {rest}, {#src + 1}
 end
 
 
 function tests.lua_var()
   local src = [[a.b.c]]
-  local rest, values = lua.Var({src=src}, 1, #src + 1)
+  local rest, values = lua.Var(src, 1, #src + 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_var0()
   local src = [[a.b.c]]
   lua.PrefixExp:setup()
-  local rest, values = lua.PrefixExp.canon({src=src}, 1, true, 2)
+  local rest, values = lua.PrefixExp.canon(src, 1, true, 2)
   return {rest}, {2}
 end
 
 
 function tests.lua_big_parse()
   local f = io.open("test.lua")
-  local invariant = {src=f:read("*all")}
-  -- invariant.src = invariant.src:rep(1000)
+  local invariant = f:read("*all")
+  invariant = invariant:rep(330)
   f.close()
 
   local rest = lua.Chunk(invariant, 1, true)
 
   -- print(invariant.src:sub(rest, rest+100))
-  return {rest}, {#invariant.src + 1}
+  return {rest}, {#invariant + 1}
 end
 
 function tests.lua_big_parse2()
   local f = io.open("bnf/language/lua.lua")
-  local invariant = {src=f:read("*all")}
+  local invariant = f:read("*all")
   f.close()
 
   local rest = lua.Chunk(invariant, 1, true)
 
   -- print(invariant.src:sub(rest, rest+100))
-  return {rest}, {#invariant.src + 1}
+  return {rest}, {#invariant + 1}
 end
 
 local function compare(actual, expected)

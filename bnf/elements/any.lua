@@ -54,17 +54,16 @@ local function skipping(skip, alternative)
 end
 
 function any:__call(invariant, position, peek, expect, exclude, skip)
-  if position > #invariant.src then
-    return nil
+  if position > #invariant then
+    return
   end
-  local reducer = self.reducer
   if not self.lookahead then
     self:index()
   end
   local lookahead = self.lookahead
   local rest
   local value
-  local alternatives = lookahead[invariant.src:byte(position)]
+  local alternatives = lookahead[invariant:byte(position)]
   local alternative
   for i=1, #alternatives do
     if not exclude or not exclude[alternatives[i]] then
