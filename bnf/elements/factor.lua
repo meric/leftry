@@ -4,9 +4,11 @@ local utils = require("bnf.utils")
 local traits = require("bnf.elements.traits")
 local any = require("bnf.elements.any")
 
+local set = require("bnf.immutable.set")
+local set_insert, set_empty = set.insert, set.empty
+
 local prototype = utils.prototype
 local copy = utils.copy
-local set = utils.set
 local filter = utils.filter
 local search_left_nonterminal = traits.search_left_nonterminal
 local left_nonterminals = traits.left_nonterminals
@@ -126,6 +128,8 @@ end
 
 local exclude_cache = {}
 
+
+
 function factor:left(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
   local span = require("bnf.elements.span")
@@ -140,33 +144,7 @@ function factor:left(invariant, position, peek, expect, exclude, skip,
     return
   end
 
-  local orig_exclude = exclude
-  if not exclude then
-    local t = exclude_cache[self]
-    if not t then
-      t = {[self]=true}
-      exclude_cache[self] = t
-    end
-    exclude = t
-  elseif not exclude[self] then
-    local t = exclude_cache[exclude]
-    if not t then
-      exclude_cache[exclude] = {}
-    end
-    t = exclude_cache[exclude][self]
-    if not t then
-      t = rawset(copy(exclude or {}), self, true)
-      exclude_cache[exclude][self] = t
-    end
-    exclude = t
-  end
-
-  -- The above is the memoized version of the following:
-  -- ```
-  -- if not exclude or not exclude[self] then
-  --   exclude = rawset(copy(exclude or {}), self, true)
-  -- end
-  -- ```
+  exclude = set_insert(exclude or set_empty, self)
 
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
     position, peek, nil, exclude)
