@@ -53,12 +53,12 @@ function factor:actualize()
   self.actualize = function() end
 end
 
-function factor:alias(invariant, position, expect, peek, exclude, skip)
-  return self.canon(invariant, position, expect, peek, exclude, skip)
+function factor:alias(invariant, position, peek, expect, exclude, skip)
+  return self.canon(invariant, position, peek, expect, exclude, skip)
 end
 
-function factor:wrap(invariant, position, expect, peek, exclude, skip)
-  local rest, value, choice = self.canon(invariant, position, expect, peek,
+function factor:wrap(invariant, position, peek, expect, exclude, skip)
+  local rest, value, choice = self.canon(invariant, position, peek, expect,
     exclude, skip)
   if not peek and rest then
     return rest, self.initializer(value, self, position, rest, choice)
@@ -78,7 +78,7 @@ function factor:measure(invariant, rest, exclude, skip)
     for i=1, #recursions do
       local alt = recursions[i]
       if not exclude[alt] then
-        rest = alt(invariant, position, nil, true, nil, skip)
+        rest = alt(invariant, position, true, nil, nil, skip)
         if rest and rest ~= position then
           final = rest
           break
@@ -104,7 +104,7 @@ function factor.trace(top, invariant, skip, sections)
   while index > 0 do
     local position = sections[index*2-1]
     local expect   = sections[index*2]
-    local rest, _, choice = top.canon(invariant, position, expect, true,
+    local rest, _, choice = top.canon(invariant, position, true, expect,
       exclude, skip)
     local alternative = top.canon[choice]
     table.insert(paths, {choice=choice, expect=expect, nonterminal=top})
@@ -126,7 +126,7 @@ end
 
 local exclude_cache = {}
 
-function factor:left(invariant, position, expect, peek, exclude, skip,
+function factor:left(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
   local span = require("bnf.elements.span")
   if given_rest then
@@ -169,7 +169,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
   -- ```
 
   local prefix_rest, prefix_value, prefix_choice = self.canon(invariant,
-    position, nil, peek, exclude)
+    position, peek, nil, exclude)
 
   if not prefix_rest then
     return
@@ -206,7 +206,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
 
   local paths_length = #paths
   while getmetatable(top) == factor do
-    local _, __, choice = top.canon(invariant, position, prefix_rest, true)
+    local _, __, choice = top.canon(invariant, position, true, prefix_rest)
     if not choice or _ ~= prefix_rest then
       break
     end
@@ -224,9 +224,9 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
     local top = path.nonterminal
     local alternative = top.canon[path.choice]
     if i == #paths then
-      rest, value = alternative(invariant, position, path.expect, peek)
+      rest, value = alternative(invariant, position, peek, path.expect)
     else
-      rest, value = alternative(invariant, position, path.expect, peek,
+      rest, value = alternative(invariant, position, peek, path.expect,
         nil, nil, paths[i+1].expect, value)
     end
     value = top.initializer(value, self, position, rest, path.choice)
@@ -234,7 +234,7 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
   return rest, value
 end
 
-function factor:call(invariant, position, expect, peek, exclude, skip,
+function factor:call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
   self:setup()
   self:actualize()
@@ -245,17 +245,17 @@ function factor:call(invariant, position, expect, peek, exclude, skip,
   else
     self.call = self.alias
   end
-  return self:call(invariant, position, expect, peek, exclude, skip,
+  return self:call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
 end
 
-function factor:__call(invariant, position, expect, peek, exclude, skip,
+function factor:__call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
   if skip and skip[self] then
-    return self:alias(invariant, position, expect, peek, exclude, skip,
+    return self:alias(invariant, position, peek, expect, exclude, skip,
       given_rest, given_value)
   end
-  return self:call(invariant, position, expect, peek, exclude, skip,
+  return self:call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
 end
 

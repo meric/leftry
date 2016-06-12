@@ -20,7 +20,7 @@ function rep:__mod(reducer)
   return rawset(self, "reducer", reducer)
 end
 
-function rep:__call(invariant, position, expect, peek, exclude, skip,
+function rep:__call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
   local initial
   local rest
@@ -31,7 +31,7 @@ function rep:__call(invariant, position, expect, peek, exclude, skip,
     if sub > #invariant.src then
       return sub, initial
     end
-    rest, value = element(invariant, sub, limit, peek, exclude, skip,
+    rest, value = element(invariant, sub, peek, limit, exclude, skip,
       given_rest, given_value)
     if not rest or (expect and rest == expect) or rest == position then
       return sub, initial

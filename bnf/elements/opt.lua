@@ -12,9 +12,9 @@ function opt:__tostring()
   return torepresentation(opt, {self.element})
 end
 
-function opt:__call(invariant, position, expect, peek, exclude, skip,
+function opt:__call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
-  local rest, value = self.element(invariant, position, expect, peek, exclude,
+  local rest, value = self.element(invariant, position, peek, expect, exclude,
     skip, given_rest, given_value)
   if not rest or (expect and rest ~= expect) then
     return position

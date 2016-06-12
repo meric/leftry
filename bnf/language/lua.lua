@@ -108,7 +108,7 @@ local function spacing(invariant, position, previous, current)
       rest = rest + 1
       byte = src:byte(rest)
     end
-    comment = Comment(invariant, rest, nil, true)
+    comment = Comment(invariant, rest, true)
   until not comment
 
   -- Check for required whitespace between two alphanumeric nonterminals.
@@ -198,8 +198,8 @@ LiteralString = factor("LiteralString", function() return
   LongString end)
 
 long_string_quote = grammar.span("[", rep("="), "[")
-LongString = function(invariant, position, expect, peek)
-  local rest = long_string_quote(invariant, position, nil, true)
+LongString = function(invariant, position, peek, expect)
+  local rest = long_string_quote(invariant, position, true)
   if not rest then
     return
   end
@@ -252,7 +252,7 @@ end
 dquoted = stringcontent("\"")
 squoted = stringcontent("\'")
 
-Numeral = function(invariant, position, limit, peek)
+Numeral = function(invariant, position, peek, limit)
   local sign, numbers = position
   local src = invariant.src
   limit = limit or #src
@@ -292,7 +292,7 @@ local keywords = {
   ["not"] = true
 }
 
-Name = function(invariant, position, expect, peek)
+Name = function(invariant, position, peek, expect)
   local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
   local zero, nine = 48, 57
   local src = invariant.src

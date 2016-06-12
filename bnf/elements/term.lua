@@ -16,7 +16,7 @@ function term:__mod(initializer)
   return rawset(self, "initializer", initializer)
 end
 
-function term:__call(invariant, position, expect, peek)
+function term:__call(invariant, position, peek, expect)
   local constant = self.constant
   local count = #constant
   local initializer = self.initializer

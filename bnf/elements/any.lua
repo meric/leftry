@@ -53,7 +53,7 @@ local function skipping(skip, alternative)
   return cache[skip][alternative]
 end
 
-function any:__call(invariant, position, expect, peek, exclude, skip)
+function any:__call(invariant, position, peek, expect, exclude, skip)
   if position > #invariant.src then
     return nil
   end
@@ -70,7 +70,7 @@ function any:__call(invariant, position, expect, peek, exclude, skip)
     if not exclude or not exclude[alternatives[i]] then
       -- Note: A `rep` element in `any` acts like a non-optional element.
       if not skip or skipping(skip, alternatives[i]) then
-        rest, value = alternatives[i](invariant, position, expect, peek,
+        rest, value = alternatives[i](invariant, position, peek, expect,
           exclude, skip)
         if rest and rest ~= sub then
           alternative = self.reverse[alternatives[i]]

@@ -39,7 +39,7 @@ function span:__tostring()
   return torepresentation(span, self)
 end
 
-function span:__call(invariant, position, expect, peek, exclude, skip,
+function span:__call(invariant, position, peek, expect, exclude, skip,
     given_rest, given_value)
   if position > #invariant.src or (exclude and exclude[self[1]]) then
     return nil
@@ -76,7 +76,7 @@ function span:__call(invariant, position, expect, peek, exclude, skip,
     if i ~= 1 then
       given_rest, given_value = nil, nil
     end
-    rest, value = self[i](invariant, sub, nil, peek, exclude, skip,
+    rest, value = self[i](invariant, sub, peek, nil, exclude, skip,
       given_rest, given_value)
     if not rest then
       return nil
