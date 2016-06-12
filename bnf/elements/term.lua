@@ -16,7 +16,7 @@ function term:__mod(initializer)
   return rawset(self, "initializer", initializer)
 end
 
-function term:__call(invariant, position, peek, expect)
+function term:__call(invariant, position, peek)
   local constant = self.constant
   local count = #constant
   local initializer = self.initializer
@@ -24,9 +24,6 @@ function term:__call(invariant, position, peek, expect)
   if position > #invariant.src or
     invariant.src:sub(position, rest - 1) ~= constant then
     return nil
-  end
-  if expect and rest ~= expect then
-    return
   end
   if initializer and not peek then
     return rest, initializer(constant, self, position, rest)
