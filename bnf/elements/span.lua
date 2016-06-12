@@ -10,6 +10,7 @@ local map = utils.map
 local torepresentation = utils.torepresentation
 
 local search_left_nonterminal = utils.search_left_nonterminal
+local left_nonterminals = traits.left_nonterminals
 
 
 local term = require("bnf.elements.term")
