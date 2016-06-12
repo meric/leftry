@@ -23,6 +23,17 @@ local function map(f, t)
   return u
 end
 
+local function filter(f, t)
+  local u = {}
+  for i=1, #t do
+    local x = t[i]
+    if f(x) then
+      table.insert(u, x)
+    end
+  end
+  return u
+end
+
 local function contains(t, u)
   for i=1, #t do
     if t[i] == u then
@@ -67,6 +78,7 @@ return {
     prototype=prototype,
     dotmap=dotmap,
     map=map,
+    filter=filter,
     torepresentation=torepresentation,
     keys=keys,
     trait=trait,

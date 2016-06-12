@@ -7,6 +7,7 @@ local any = require("bnf.elements.any")
 local prototype = utils.prototype
 local copy = utils.copy
 local set = utils.set
+local filter = utils.filter
 local search_left_nonterminal = traits.search_left_nonterminal
 local left_nonterminals = traits.left_nonterminals
 
@@ -35,6 +36,9 @@ function factor:setup()
     self.canon = self:canonize()
   end
   self.setup = function() return self.canon end
+  self.recursions = any(unpack(filter(function(alt) return
+    search_left_nonterminal(alt, self)
+  end, self.canon)))
   return self.canon
 end
 
@@ -62,24 +66,20 @@ function factor:wrap(invariant, position, expect, peek, exclude, skip)
   return rest, value
 end
 
-function factor:measure(invariant, rest, expect, exclude, skip)
-  if expect == rest then
-    return
-  end
+function factor:measure(invariant, rest, exclude, skip)
   local sections
   local n = 0
   local final
   local limit = #invariant.src
-  local canon = self.canon
+  local recursions = self.recursions
 
   while limit >= rest do
     local position = rest
-    for i=1, #canon do
-      local alternative = canon[i]
-      if search_left_nonterminal(alternative, self)
-          and (not exclude or not exclude[alternative]) then
-        rest = alternative(invariant, position, nil, true, nil, skip)
-        if rest and rest ~= position or (expect and rest == expect) then
+    for i=1, #recursions do
+      local alt = recursions[i]
+      if not exclude[alt] then
+        rest = alt(invariant, position, nil, true, nil, skip)
+        if rest and rest ~= position then
           final = rest
           break
         end
@@ -93,13 +93,7 @@ function factor:measure(invariant, rest, expect, exclude, skip)
     end
     table.insert(sections, position)
     table.insert(sections, rest)
-    if expect and rest == expect then
-      break
-    end
   end
-  -- if final then
-  --   assert(final == sections[#sections].expect)
-  -- end
   return final, sections
 end
 
@@ -182,11 +176,17 @@ function factor:left(invariant, position, expect, peek, exclude, skip,
 
   if not prefix_rest then
     return
+  elseif prefix_rest == expect then
+    if peek then
+      return prefix_rest
+    end
+    return prefix_rest, self.initializer(
+      prefix_value, self, position, prefix_rest, prefix_choice)
   end
 
   local skip = left_nonterminals(self)
-  local rest, sections = self:measure(invariant, prefix_rest, expect,
-    orig_exclude, skip)
+
+  local rest, sections = self:measure(invariant, prefix_rest, exclude, skip)
 
   if expect and (rest or prefix_rest) ~= expect then
     return
