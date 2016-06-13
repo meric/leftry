@@ -1,6 +1,7 @@
 local utils = require("bnf.utils")
 local termize = require("bnf.elements.utils").termize
 local traits = require("bnf.elements.traits")
+local memoize = require("bnf.immutable.memoize")
 local hash = traits.hash
 
 local prototype = utils.prototype
@@ -21,46 +22,41 @@ function any:__tostring()
 end
 
 function any:index()
-  self.lookahead = {}
+  self.cache = {}
   self.reverse = {}
   for i=1, 255 do
-    self.lookahead[i] = {}
+    self.cache[i] = {}
   end
   for i=1, #self do
     self.reverse[self[i]] = i
     local h = {hash(self[i])}
     for j=1, #h do
-      table.insert(self.lookahead[h[j]], self[i])
+      table.insert(self.cache[h[j]], self[i])
     end
   end
+  return self.cache
 end
 
-function any:__call(invariant, position, peek, expect, exclude, skip)
+local _search_left_nonterminals = memoize(search_left_nonterminals, 2)
+
+function any:__call(invariant, position, peek, expect, exclude, nonterminals)
   if position > #invariant then
     return
   end
-  if not self.lookahead then
-    self:index()
-  end
-  local lookahead = self.lookahead
-  local rest
-  local value
-  local alternatives = lookahead[invariant:byte(position)]
-  local alternative
-  for i=1, #alternatives do
-    if not exclude or not exclude[alternatives[i]] then
+  local alts = (self.cache or self:index())[invariant:byte(position)]
+  for i=1, #alts do
+    if not exclude or not exclude[alts[i]] then
       -- Note: A `rep` element in `any` acts like a non-optional element.
-      if not skip or search_left_nonterminals(alternatives[i], skip) then
-        rest, value = alternatives[i](invariant, position, peek, expect,
-          exclude, skip)
-        if rest and rest ~= sub then
-          alternative = self.reverse[alternatives[i]]
-          break
+      if not nonterminals or
+          _search_left_nonterminals[alts[i]][nonterminals] then
+        local rest, value = alts[i](invariant, position, peek, expect,
+          exclude, nonterminals)
+        if rest and rest > position then
+          return rest, value, self.reverse[alts[i]]
         end
       end
     end
   end
-  return rest, value, alternative
 end
 
 return any

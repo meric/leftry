@@ -40,61 +40,57 @@ function span:__tostring()
   return torepresentation(span, self)
 end
 
-function span:__call(invariant, position, peek, expect, exclude, skip,
+function span:__call(invariant, position, peek, expect, met, nonterminals,
     given_rest, given_value)
-  if position > #invariant or (exclude and exclude[self[1]]) then
-    return nil
+
+  if position > #invariant or met and met[self[1]] then
+    return
   end
-  local rest = position
-  local reducer = self.reducer
-  local values
-  local first = 1
-  if skip and skip[self[1]] then
-    -- A skip argument means we want to run an alternative beginning with
-    -- a left nonterminal that appears in the skip table, and then parse
-    -- by skipping that left nonterminal.
-    -- If this span does not fit that criteria, we should abort.
-    -- Otherwise, we begin parsing by skipping the first element.
-    if getmetatable(self[1]) ~= factor and 
-        not search_left_nonterminal(self[1], self[1]) then
+
+  local rest, reducer, spacing, values = position, self.reducer, self.spacing
+
+  if not nonterminals or not nonterminals[self[1]] then
+    if spacing then
+      rest = spacing(invariant, rest, nil, self[1])
+      if not rest then
+        return
+      end
+    end
+    local value
+    if given_rest then
+      rest, value = given_rest, given_value
+    else
+      rest, value = self[1](invariant, rest, peek, nil, met, nonterminals)
+      if not rest then
+        return
+      end
+    end
+    if not peek then
+      values = reducer(values, value, 1, self, position, rest)
+    end
+  end
+  if spacing then
+    rest = spacing(invariant, rest, self[1], self[2])
+    if not rest then
       return
     end
-    first = first + 1
   end
-
-  if self.spacing then
-    -- Apply spacing rule at beginning of span.
-    rest = self.spacing(invariant, rest, nil, self[1])
-  end
-
-  for i=first, #self do 
+  for i=2, #self do
+    local sub = rest
     local value
-    local sub = rest or position
-    if i > 1 then
-      skip = nil
-      exclude = nil
-    end
-    if i ~= 1 then
-      given_rest, given_value = nil, nil
-    end
-    rest, value = self[i](invariant, sub, peek, nil, exclude, skip,
-      given_rest, given_value)
+    rest, value = self[i](invariant, sub, peek)
     if not rest then
-      return nil
+      return
     end
     if not peek then
       values = reducer(values, value, i, self, sub, rest)
     end
-    if rest and self.spacing then
-      -- Apply spacing rule between each element.
-      rest = self.spacing(invariant, rest, self[i], self[i+1])
+    if spacing then
+      rest = spacing(invariant, rest, self[i], self[i+1])
       if not rest then
-        return nil
+        return
       end
     end
-  end
-  if expect and rest ~= expect or rest == position then
-    return
   end
   return rest, values
 end

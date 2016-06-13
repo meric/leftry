@@ -42,6 +42,14 @@ local function contains(t, u)
   end
 end
 
+function reverse(t)
+  local u = {}
+  for k, v in ipairs(t) do
+      u[#t + 1 - k] = v
+  end
+  return u
+end
+
 local function copy(t, u)
   u = u or {}
   for k, v in pairs(t) do
@@ -76,5 +84,6 @@ return {
     trait=trait,
     copy=copy,
     contains=contains,
-    set=set
+    set=set,
+    reverse=reverse
 }
