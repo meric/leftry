@@ -288,7 +288,20 @@ local keywords = {
   ["function"] = true,
   ["end"] = true,
   ["in"] = true,
-  ["not"] = true
+  ["not"] = true,
+  ["and"] = true,
+  ["break"] = true,
+  ["do"] = true,
+  ["else"] = true,
+  ["elseif"] = true,
+  ["for"] = true,
+  ["if"] = true,
+  ["local"] = true,
+  ["or"] = true,
+  ["repeat"] = true,
+  ["then"] = true,
+  ["until"] = true,
+  ["while"] = true
 }
 
 Name = function(invariant, position, peek)
