@@ -6,7 +6,7 @@ Computers ought to be able to, too!
 
 This is alpha software.
 
-## Why ##
+## How ##
 
 > It's clear that recursive descent parser will go into infinite loop if 
  the non-terminal keeps on expanding into itself.
