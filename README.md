@@ -20,8 +20,8 @@ This is alpha software.
  rest, values = parser(invariant, position, [peek])
  ```
 
- 1. `rest` is the next index to parse. `rest-1` is the last index of value that
-    was parsed. If `rest` was `nil`, it means the parse is invalid.
+ 1. `rest` is the next index to parse. `rest-1` is the last index of the parsed
+    value. If `rest` is `nil`, it means the parse is invalid.
  2. `values` is the data created as a result of a successful parse.
  3. `invariant` is the Lua string that is being parsed.
  4. `position` is the integer index to start the parse from.
@@ -117,14 +117,14 @@ Performance of the built-in Lua parser.
   Create a non-terminal element.
 
   * `name` is the tostring value of the element.
-  * `generate` is the function that, when called with itself, returns the
+  * `generate` is the function that, when called with this element, returns the
     definition of this non-terminal. The values returned with this function
     will be wrapped in an `any`. You may optionally, explicitly return a single
     `any` that contains all the alternatives. Strings literals are
     automatically converted into `term` elements.
   * `initializer` is the function that will be called with values parsed
     from this element to let the user convert the parsed value into something
-    useful. See "Constructors" section.
+    useful. See "Data Constructors" section.
 
   Usage:
 
@@ -143,7 +143,7 @@ Performance of the built-in Lua parser.
     Strings literals are automatically converted into `term` elements.
   * `reducer` is the function that will be called with values parsed
     from this element to let the user convert the parsed values into something
-    useful. See "Constructors" section.
+    useful. See "Data Constructors" section.
 
   Usage:
 
@@ -172,7 +172,7 @@ Performance of the built-in Lua parser.
   `%` operator. See the "Data Constructors" section.
 
   * `...` the children of the span element. Each child must be encountered in
-    order to provide a valid parse (unless it is an `opt` or `rep` element),
+    order to provide a valid parse, unless it is an `opt` or `rep` element.
 
   Usage:
 
@@ -184,9 +184,7 @@ Performance of the built-in Lua parser.
   end)
   ```
 
-  The span element can also be
-  assigned a spacing rule using the `^` operator. See built-in Lua parser
-  for an example on how to apply the spacing function:
+  The span element can also be assigned a spacing rule using the `^` operator:
 
   ```
   local function span(...)
@@ -194,6 +192,8 @@ Performance of the built-in Lua parser.
     return grammar.span(...) ^ {spacing=spacing, spaces=" \t\r\n"}
   end
   ```
+
+  See built-in Lua parser for an example on what spacing function looks like.
 
 * `term(literal, [initializer])`
 
@@ -312,4 +312,5 @@ The current implementation does not enforce the following rules properly.
 * ~~Implement Lua grammar in Leftry to prove it can handle the grammar of a
 programming language.~~
 * ~~Implement whitespacing support.~~
-* Process parsed Lua into a suitable data structure.
+* Add appropriate data initializers for the builtin Lua parser, to ovveride the
+  default ones.
