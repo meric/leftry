@@ -1,6 +1,6 @@
 # Leftry - A left recursion enabled recursive-descent parser combinator library. #
 
-## Description ##
+## Why ##
 
 Humans can parse a left recursion grammar without stack overflowing.
 
