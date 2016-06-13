@@ -46,7 +46,11 @@ grammar, and twist my data functions to support this?
   Everything else is secondary.
 > - [Steve Jobs](https://news.stanford.edu/2005/06/14/jobs-061505/)
 
-Here goes...
+> Here goes...
+> - Me, December 2015
+
+> I think it's getting there. Hmm, what month is this?
+> - Me, June 2016
 
 ## Lua Parser ##
 
