@@ -21,7 +21,7 @@ a computer science student stuck in class, because he can't get out of a left
 recursive parse?
 
 > To adapt this grammar to use with a recursive descent parser, we need to eliminate the left recursion.
-> - [A lecturer at a universith](http://faculty.ycp.edu/~dhovemey/fall2011/cs340/lecture/lecture9.html)
+> - [A lecturer at a university](http://faculty.ycp.edu/~dhovemey/fall2011/cs340/lecture/lecture9.html)
 
 So you're saying we have to rewrite the grammar *by hand*, and then we have to
 twist our data functions this way and that way to rebuild our
