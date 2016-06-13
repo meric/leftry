@@ -1,5 +1,5 @@
-local utils = require("bnf.utils")
-local termize = require("bnf.elements.utils").termize
+local utils = require("leftry.utils")
+local termize = require("leftry.elements.utils").termize
 
 local prototype = utils.prototype
 local torepresentation = utils.torepresentation

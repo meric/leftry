@@ -1,7 +1,7 @@
-local utils = require("bnf").utils
-local grammar = require("bnf").grammar
-local lua = require("bnf.language.lua")
-local traits = require("bnf.elements.traits")
+local utils = require("leftry").utils
+local grammar = require("leftry").grammar
+local lua = require("leftry.language.lua")
+local traits = require("leftry.elements.traits")
 local span = grammar.span
 local opt = grammar.opt
 local rep = grammar.rep
@@ -105,10 +105,9 @@ function tests.span_parse_failure()
 end
 
 function tests.span_as_iterator()
-  local src = "123123123"
   local actual = {}
-  for i, values in span("1", "2", "3"), src, 1 do
-    table.insert(actual, i)
+  for rest, values in span("1", "2", "3"), "123123123", 1 do
+    table.insert(actual, rest)
   end
   return actual, {4, 7, 10}
 end
@@ -235,15 +234,15 @@ function tests.lua_exp()
 end
 
 function tests.lua_stat()
-  local src = 'local utils = require("bnf").utils'
+  local src = 'local utils = require("leftry").utils'
   local rest, values = lua.Stat(src, 1)
   return {rest}, {#src + 1}
 end
 
 function tests.lua_block()
   local src = [[
-    local utils = require("bnf").utils
-    local grammar = require("bnf").grammar
+    local utils = require("leftry").utils
+    local grammar = require("leftry").grammar
   ]]
   local rest, values = lua.Block(src, 1)
   return {rest}, {#src + 1}
@@ -343,7 +342,7 @@ function tests.lua_big_parse()
 end
 
 function tests.lua_big_parse2()
-  local f = io.open("bnf/language/lua.lua")
+  local f = io.open("leftry/language/lua.lua")
   local invariant = f:read("*all")
   f.close()
 

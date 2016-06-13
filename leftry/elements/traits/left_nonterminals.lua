@@ -1,6 +1,6 @@
-local grammar = require("bnf.grammar")
-local traits = require("bnf.elements.traits")
-local set = require("bnf.immutable.set")
+local grammar = require("leftry.grammar")
+local traits = require("leftry.elements.traits")
+local set = require("leftry.immutable.set")
 
 local set_insert, set_empty = set.insert, set.empty
 

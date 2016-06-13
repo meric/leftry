@@ -1,8 +1,8 @@
-local opt = require("bnf.elements.opt")
-local termize = require("bnf.elements.utils").termize
-local utils = require("bnf.utils")
-local factor = require("bnf.elements.factor")
-local traits = require("bnf.elements.traits")
+local opt = require("leftry.elements.opt")
+local termize = require("leftry.elements.utils").termize
+local utils = require("leftry.utils")
+local factor = require("leftry.elements.factor")
+local traits = require("leftry.elements.traits")
 
 local prototype = utils.prototype
 local dotmap = utils.dotmap
@@ -13,7 +13,7 @@ local search_left_nonterminal = utils.search_left_nonterminal
 local left_nonterminals = traits.left_nonterminals
 
 
-local term = require("bnf.elements.term")
+local term = require("leftry.elements.term")
 local span = prototype("span", function(self, ...)
   assert(select("#", ...) > 1, "span must consist of two or more elements.")
   return setmetatable({dotmap(termize, ...)}, self)

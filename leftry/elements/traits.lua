@@ -1,4 +1,4 @@
-local trait = require("bnf.trait")
+local trait = require("leftry.trait")
 
 return {
   left_nonterminals = trait "left_nonterminals",

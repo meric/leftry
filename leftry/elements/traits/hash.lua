@@ -1,6 +1,6 @@
-local grammar = require("bnf.grammar")
-local traits = require("bnf.elements.traits")
-local utils = require("bnf.utils")
+local grammar = require("leftry.grammar")
+local traits = require("leftry.elements.traits")
+local utils = require("leftry.utils")
 
 local any = grammar.any
 local span = grammar.span

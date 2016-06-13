@@ -1,4 +1,4 @@
-local reverse = require("bnf.utils").reverse
+local reverse = require("leftry.utils").reverse
 
 local function curry(f, n, ...)
   local curried = {...}

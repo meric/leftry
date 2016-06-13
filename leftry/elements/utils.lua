@@ -1,4 +1,4 @@
-local term = require("bnf.elements.term")
+local term = require("leftry.elements.term")
 
 local termize = function(value)
   if type(value) == "string" then

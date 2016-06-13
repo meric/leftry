@@ -1,4 +1,4 @@
-local utils = require("bnf.utils")
+local utils = require("leftry.utils")
 local prototype = utils.prototype
 local dotmap = utils.dotmap
 local map = utils.map

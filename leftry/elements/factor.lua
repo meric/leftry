@@ -1,10 +1,10 @@
-local opt = require("bnf.elements.opt")
-local termize = require("bnf.elements.utils").termize
-local utils = require("bnf.utils")
-local traits = require("bnf.elements.traits")
-local any = require("bnf.elements.any")
+local opt = require("leftry.elements.opt")
+local termize = require("leftry.elements.utils").termize
+local utils = require("leftry.utils")
+local traits = require("leftry.elements.traits")
+local any = require("leftry.elements.any")
 
-local set = require("bnf.immutable.set")
+local set = require("leftry.immutable.set")
 local set_insert, set_empty = set.insert, set.empty
 
 local prototype = utils.prototype
@@ -97,7 +97,7 @@ function factor:measure(invariant, rest, exclude, skip)
 end
 
 function factor.trace(top, invariant, skip, sections)
-  local span = require("bnf.elements.span")
+  local span = require("leftry.elements.span")
   local index = #sections/2
   local paths = {}
   while index > 0 do

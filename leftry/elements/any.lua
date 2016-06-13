@@ -1,7 +1,7 @@
-local utils = require("bnf.utils")
-local termize = require("bnf.elements.utils").termize
-local traits = require("bnf.elements.traits")
-local memoize = require("bnf.immutable.memoize")
+local utils = require("leftry.utils")
+local termize = require("leftry.elements.utils").termize
+local traits = require("leftry.elements.traits")
+local memoize = require("leftry.immutable.memoize")
 local hash = traits.hash
 
 local prototype = utils.prototype

@@ -1,4 +1,4 @@
-local grammar = require("bnf.grammar")
+local grammar = require("leftry.grammar")
 
 local opt = grammar.opt
 local rep = grammar.rep

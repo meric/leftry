@@ -1,4 +1,4 @@
-local prototype = require("bnf.utils").prototype
+local prototype = require("leftry.utils").prototype
 
 local trait = prototype("trait", function(trait, name, memoize_n)
   return setmetatable({name=name, memoize={}}, trait)

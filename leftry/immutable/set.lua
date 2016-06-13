@@ -6,7 +6,7 @@ Only use `insert` and `remove` to add or remove objects from sets.
 There can only be one immutable set for a particular set of content objects.
 --]]--
 
-local utils = require("bnf.utils")
+local utils = require("leftry.utils")
 local copy = utils.copy
 
 local cache_remove = setmetatable({}, {
