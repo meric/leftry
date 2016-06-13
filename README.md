@@ -364,5 +364,5 @@ The current implementation does not enforce the following rules properly.
 * ~~Implement Lua grammar in Leftry to prove it can handle the grammar of a
 programming language.~~
 * ~~Implement whitespacing support.~~
-* Add appropriate data initializers for the builtin Lua parser, to overide the
+* Add appropriate data initializers for the builtin Lua parser, to override the
   default ones.
