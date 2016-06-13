@@ -337,7 +337,7 @@ function tests.lua_big_parse()
   local f = io.open("test.lua")
   local invariant = f:read("*all")
   f.close()
-  local rest = lua.Chunk(invariant, 1, true)
+  local rest = lua.Chunk(invariant, 1)
   return {rest}, {#invariant + 1}
 end
 
@@ -346,10 +346,21 @@ function tests.lua_big_parse2()
   local invariant = f:read("*all")
   f.close()
 
-  local rest = lua.Chunk(invariant, 1, true)
+  local rest = lua.Chunk(invariant, 1)
 
   return {rest}, {#invariant + 1}
 end
+
+function tests.lua_big_parse3()
+  local f = io.open("leftry/elements/factor.lua")
+  local invariant = f:read("*all")
+  f.close()
+
+  local rest = lua.Chunk(invariant, 1)
+
+  return {rest}, {#invariant + 1}
+end
+
 
 local function compare(actual, expected)
   assert(actual) assert(expected)
