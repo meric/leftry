@@ -50,7 +50,7 @@ Here goes...
 
 ## Lua Parser ##
 
-[Lua Parser implemented in Leftry](leftry/language/lua.lua#L134)
+[Lua parser implemented in Leftry](leftry/language/lua.lua#L134)
 
 ## Running unit tests ##
 
