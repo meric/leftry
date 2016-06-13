@@ -16,9 +16,10 @@ When we look at a grammar and parse it with our eyes, it feels natural to
 use recursive descent. When we encounter instances of left recursion, our
 eyes are able to look ahead and rewrite the grammar, see how far the left
 recursions go, and then piece the left recursions back together. Why can't
-a recursive descent algorithm do the same thing? I mean, have you ever seen
-a computer science student stuck in class, because he can't get out of a left
-recursive parse?
+a recursive descent algorithm do the same thing?
+
+*Have you ever seen a computer science student stuck in class, because he can't get out of a left
+recursive parse?*
 
 > To adapt this grammar to use with a recursive descent parser, we need to eliminate the left recursion.
 > - [A lecturer at a university](http://faculty.ycp.edu/~dhovemey/fall2011/cs340/lecture/lecture9.html)
