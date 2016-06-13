@@ -8,6 +8,10 @@ Computers ought to be able to, too!
 
 This is alpha software.
 
+## Lua Parser ##
+
+[Lua Parser implemented in Leftry](leftry/language/lua.lua#L134)
+
 ## Running unit tests ##
 
 `lua test.lua` 
