@@ -313,58 +313,6 @@ The current implementation does not enforce the following rules properly.
 6. The first nonterminal element of a span that is part of a left recursion
    path, cannot be wrapped in `opt` or `rep`.
 
-## How ##
-
-> It's clear that recursive descent parser will go into infinite loop if
- the non-terminal keeps on expanding into itself.
-> - [A Stack Overflow User](http://stackoverflow.com/a/30375377)
-
-When we look at a grammar and parse it with our eyes, it feels natural to
-use recursive descent. When we encounter instances of left recursion, our
-eyes are able to look ahead and rewrite the grammar, see how far the left
-recursions go, and then piece the left recursions back together. Why can't
-a recursive descent algorithm do the same thing?
-
-*Have you ever seen a computer science student stuck in class, because he can't get out of a left
-recursive parse?*
-
-> To adapt this grammar to use with a recursive descent parser, we need to eliminate the left recursion.
-> - [A lecturer at a university](http://faculty.ycp.edu/~dhovemey/fall2011/cs340/lecture/lecture9.html)
-
-So you're saying we have to rewrite the grammar *by hand*, and then we have to
-twist our data functions this way and that way to rebuild our
-original intention with this grammar? Left recursion is feels so natural to
-use when writing certain grammars!
-
-> For recursive descent, left recursion must be avoided at all costs
-> - [Another Stack Overflow User](http://cs.stackexchange.com/questions/2696/left-recursion-and-left-factoring-which-one-goes-first#comment7246_2696)
-
-You're not listening to me. Why should *I* be the one have to rewrite my
-grammar, and twist my data functions to support this?
-
-*I paid $2000 for this Macbook Pro.*
-
-*Why can't the computer do it?*
-
-> Your time is limited, so don't waste it living someone else's life.
-  Don't be trapped by dogma - which is living with the results of other
-  people's thinking. Don't let the noise of other's opinions drown out your own
-  inner voice. And most important, have the courage to follow your heart and
-  intuition. They somehow already know what you truly want to become.
-  Everything else is secondary.
-> - [Steve Jobs](https://news.stanford.edu/2005/06/14/jobs-061505/)
-
-&nbsp;
-
-> Here goes...
-> - Me, December 2015
-
-&nbsp;
-
-> I think it's getting there. Hmm, what month is this?
-> - Me, June 2016
-
-
 ## TODO ##
 
 * ~~Implement Lua grammar in Leftry to prove it can handle the grammar of a
