@@ -59,7 +59,10 @@ function factor:actualize()
 end
 
 function factor:alias(invariant, position, peek, expect, exclude, skip)
-  return self.canon(invariant, position, peek, expect, exclude, skip)
+  -- Discard additional returns by explict assignment.
+  local rest, value = self.canon(invariant, position, peek, expect, exclude,
+    skip)
+  return rest, value
 end
 
 function factor:wrap(invariant, position, peek, expect, exclude, skip)
