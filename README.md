@@ -1,10 +1,25 @@
 # Leftry - A left recursion enabled recursive-descent parser combinator library. #
 
-Humans can parse a left recursion grammar without stack overflowing.
+This library is for creating and composing parsers.
 
-Computers ought to be able to, too!
+For example:
 
-This is alpha software.
+```
+local grammar = require("leftry")
+local factor = grammar.factor
+local span = grammar.span
+local A = factor("A", function(A) return
+  span(A, "1"), "1"
+end)
+local B = factor("B", function(B) return
+  span(B, "2"), A
+end)
+
+print(B("111122222", 1))
+```
+
+This creates a parser `B` that can parse the string "111122222".
+
 
 ## Install ##
 
