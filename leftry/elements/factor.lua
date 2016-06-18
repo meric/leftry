@@ -51,6 +51,9 @@ function factor:actualize()
     return search_left_nonterminal(a, self)
       and not search_left_nonterminal(b, self)
   end)
+  for i, v in ipairs(canon) do
+    table.insert(self, v)
+  end
   self.canonize = function() return canon end
   self.actualize = function() end
 end

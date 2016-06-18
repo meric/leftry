@@ -1,5 +1,5 @@
 local leftry = require("leftry")
-local lua = require("leftry.language.lua")
+local lua = require("leftry.language.lua")()
 local traits = require("leftry.elements.traits")
 
 local utils = leftry.utils
@@ -360,6 +360,28 @@ function tests.lua_big_parse3()
   local rest = lua.Chunk(invariant, 1)
 
   return {rest}, {#invariant + 1}
+end
+
+function tests.lua_customize()
+  local Lua = require("leftry.language.lua")()
+  -- Add data initializer for UnOp
+  function Lua.UnOp.initializer(value, self, position, rest, choice)
+    assert(value == "-")
+    return "a"
+  end
+  local rest, value = Lua.UnOp("-", 1)
+  return {rest, value}, {2, "a"}
+end
+
+function tests.lua_customize1()
+  local Lua = require("leftry.language.lua")()
+  -- Add data initializer for UnOp for the first alternative of UnOp.
+  Lua.UnOp[1].initializer = function(value, self, position, rest)
+    assert(value == "-")
+    return "a"
+  end
+  local rest, value = Lua.UnOp("-", 1)
+  return {rest, value}, {2, "a"}
 end
 
 
