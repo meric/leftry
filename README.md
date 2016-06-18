@@ -25,6 +25,11 @@ This creates a parser `B` that can parse the string "111122222".
 
 `luarocks install --server=http://luarocks.org/dev leftry`
 
+## Algorithm ##
+
+First trace with a [left-factored](http://www.csd.uwo.ca/~moreno//CS447/Lectures/Syntax.html/node9.html)
+version of the grammar, then apply the left-recursive grammar. Like how a human would intuitively do it.
+
 ## Other Top-down left recursion enabled parser combinator implementations ##
 
 * http://hafiz.myweb.cs.uwindsor.ca/xsaiga/fullAg.html
