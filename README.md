@@ -6,6 +6,11 @@ Computers ought to be able to, too!
 
 This is alpha software.
 
+## Other Top-down left recursion enabled parser combinator implementations ##
+
+* http://hafiz.myweb.cs.uwindsor.ca/xsaiga/fullAg.html
+* https://github.com/djspiewak/gll-combinators
+
 ## How ##
 
 > It's clear that recursive descent parser will go into infinite loop if 
@@ -367,3 +372,12 @@ programming language.~~
 * ~~Implement whitespacing support.~~
 * Add appropriate data initializers for the builtin Lua parser, to override the
   default ones.
+
+* Test the following grammar:
+
+    ```
+    "b"
+    | s ~ s       ^^ { _ + _ }
+    | s ~ s ~ s   ^^ { _ + _ + _ }
+    https://github.com/djspiewak/gll-combinators
+    ```

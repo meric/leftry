@@ -25,7 +25,7 @@ function tests.factor_peek_parse_success()
   local A = factor("A", function(A) return
     span(A, "1"), "1"
   end)
-  local src = "11"
+  local src = ("1"):rep(2)
   return {A(src, 1, true)}, {#src + 1}
 end
 
