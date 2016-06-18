@@ -6,6 +6,10 @@ Computers ought to be able to, too!
 
 This is alpha software.
 
+## Install ##
+
+`luarocks install --server=http://luarocks.org/dev leftry`
+
 ## Other Top-down left recursion enabled parser combinator implementations ##
 
 * http://hafiz.myweb.cs.uwindsor.ca/xsaiga/fullAg.html
