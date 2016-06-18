@@ -22,7 +22,7 @@ end
 
 function rep:__call(invariant, position, peek)
   local initial
-  local rest
+  local rest, value
   local element = self.element
   local i = 1
   while true do

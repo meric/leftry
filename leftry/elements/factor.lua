@@ -104,7 +104,7 @@ function factor.trace(top, invariant, skip, sections)
     local position = sections[index*2-1]
     local expect   = sections[index*2]
     local rest, _, choice = top.canon(invariant, position, true, expect,
-      exclude, skip)
+      nil, skip)
     local alternative = top.canon[choice]
     table.insert(paths, {choice=choice, expect=expect, nonterminal=top})
 

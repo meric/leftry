@@ -81,9 +81,7 @@ return {
     filter=filter,
     torepresentation=torepresentation,
     keys=keys,
-    trait=trait,
     copy=copy,
     contains=contains,
-    set=set,
     reverse=reverse
 }

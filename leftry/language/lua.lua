@@ -101,6 +101,7 @@ local function spacing(invariant, position, previous, current)
 
   -- Skip whitespace and comments
   local comment = position
+  local rest
   repeat
     rest = comment
     byte = src:byte(rest)
