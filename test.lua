@@ -1,12 +1,13 @@
-local utils = require("leftry").utils
-local grammar = require("leftry").grammar
+local leftry = require("leftry")
 local lua = require("leftry.language.lua")
 local traits = require("leftry.elements.traits")
-local span = grammar.span
-local opt = grammar.opt
-local rep = grammar.rep
-local any = grammar.any
-local factor = grammar.factor
+
+local utils = leftry.utils
+local span = leftry.span
+local opt = leftry.opt
+local rep = leftry.rep
+local any = leftry.any
+local factor = leftry.factor
 local tests = {}
 
 function tests.dotmap()
