@@ -123,10 +123,6 @@ function factor.trace(top, invariant, skip, sections)
   return top, paths
 end
 
-local exclude_cache = {}
-
-
-
 function factor:left(invariant, position, peek, expect, exclude)
 
   if position > #invariant then
