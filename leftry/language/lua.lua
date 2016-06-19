@@ -91,6 +91,8 @@ return function()
 
   Comment = factor("Comment", function() return
     grammar.span("--", function(invariant, position)
+      -- Parse --[[ comment ]]
+      position = LongString(invariant, position) or position
       while invariant:sub(position, position) ~= "\n" do
         position = position + 1
       end

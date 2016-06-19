@@ -10,6 +10,13 @@ local any = leftry.any
 local factor = leftry.factor
 local tests = {}
 
+
+--[[
+
+Unit Tests.
+
+]]--
+
 function tests.dotmap()
   return {utils.dotmap(function(x) return x + 1 end, 1, 3, 5)}, {2, 4, 6}
 end
