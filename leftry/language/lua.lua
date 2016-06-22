@@ -51,7 +51,25 @@ local term = grammar.term
 
 -- Non-Terminals
 
-return function()
+local function default_initializer(value)
+  return value
+end
+
+local function default_reducer(initial, value, i)
+  return rawset(initial or {}, i, value)
+end
+
+return function(options)
+  local initializer = default_initializer
+  local reducer = default_reducer
+
+  if options and options.initializer then
+    initializer = options.initializer
+  end
+
+  if options and options.reducer then
+    reducer = options.reducer
+  end
 
   local Chunk, Block, Stat, RetStat, Label, FuncName, VarList, Var, NameList,
         ExpList, Exp, PrefixExp, FunctionCall, Args, FunctionDef, FuncBody,
@@ -69,7 +87,7 @@ return function()
     return a
   end
 
-  local spaces = {
+  local is_space = {
     [(" "):byte()] = true,
     [("\t"):byte()] = true,
     [("\r"):byte()] = true,
@@ -99,6 +117,8 @@ return function()
       return position
     end) end)
 
+  local spaces = " \t\r\n"
+
   local function spacing(invariant, position, previous, current)
     local src = invariant
     local byte = src:byte(position)
@@ -109,7 +129,7 @@ return function()
     repeat
       rest = comment
       byte = src:byte(rest)
-      while spaces[byte] do
+      while is_space[byte] do
         rest = rest + 1
         byte = src:byte(rest)
       end
@@ -129,7 +149,19 @@ return function()
 
   local function span(...)
     -- Apply spacing rule to all spans we use in the Lua grammar.
-    return grammar.span(...) ^ {spacing=spacing, spaces=" \t\r\n"}
+    return (grammar.span(...) % reducer) ^ {spacing=spacing, spaces=spaces}
+  end
+
+  local function rep(...)
+    return grammar.rep(...) % reducer
+  end
+
+  local function term(...)
+    return grammar.term(...) % initializer
+  end
+
+  local function factor(name, canonize)
+    return grammar.factor(name, canonize, initializer)
   end
 
   Chunk = factor("Chunk", function() return
@@ -370,14 +402,22 @@ return function()
     Name=Name,
     Space=Space,
     Comment=Comment,
-    LongString=LongString
+    LongString=LongString,
+    span=span,
+    rep=rep,
+    spacing=spacing,
+    term=term,
+    factor=factor,
+    spaces=spaces,
+    is_space=is_space
   }
+
   for k, v in pairs(exports) do
-    if getmetatable(v) == factor then
+    if getmetatable(v) == grammar.factor then
       v:setup()
       v:actualize()
     end
   end
+
   return exports
 end
-
