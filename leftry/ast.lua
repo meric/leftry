@@ -14,9 +14,6 @@ local function reduce(name, indices, __tostring)
     if not indices or reverse[i] then
       values[i] = value
     end
-    -- if name == "lua_assign" and i==3 then
-    --   print(values)
-    -- end
     values.rest = rest
     return values
   end)
