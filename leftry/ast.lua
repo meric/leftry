@@ -3,6 +3,8 @@ local prototype = utils.prototype
 local map = utils.map
 
 
+-- Create a reducer to be used with `span`.
+-- For now, see leftry/language/lua.lua for usage.
 local function reduce(name, indices, __tostring)
   local reverse = {}
   local template = {}
@@ -64,6 +66,9 @@ local function reduce(name, indices, __tostring)
   return proto
 end
 
+-- Create an identity initializer to be used in function parsers and
+-- nonterminals.
+-- For now, see leftry/language/lua.lua for usage.
 local function id(name, key, __tostring)
   local proto = prototype(name, function(self, value)
     return setmetatable({value}, self)
@@ -91,6 +96,10 @@ local function const(name, value)
   return proto
 end
 
+
+-- Create an initializer that casts an array (from `leftflat` or `rightflat`)
+-- into this type.
+-- For now, see leftry/language/lua.lua for usage.
 local function cast(name, separator, indices, __tostring)
   local reverse = {}
   if indices then
