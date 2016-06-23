@@ -132,10 +132,10 @@ Performance of the built-in Lua parser.
 * Macbook Pro 2.6 Ghz i7 with 16 GB RAM:
   * Lua:
     1. Validate the grammar of around 0.4 megabytes of Lua per second.
-    2. Parse 0.18 megabytes of Lua into tables per second.
+    2. Parse 0.1 megabytes of Lua into abstract syntax tree representation per second.
   * LuaJIT:
     1. Validate the grammar of around 4 megabytes of Lua per second.
-    2. Parse 1 megabytes of Lua into tables per second.
+    2. Parse 0.68 megabytes of Lua into abstract syntax tree representation per second.
   * For comparison:
     1. Lua interpreter can load a 15 megabyte Lua function in one second.
     2. LuaJIT can load a 25 megabyte Lua function in one second.
