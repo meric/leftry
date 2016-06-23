@@ -1,5 +1,5 @@
 local leftry = require("leftry")
-local lua = require("leftry.language.lua")()
+local lua = require("leftry.language.lua")
 local traits = require("leftry.elements.traits")
 
 local utils = leftry.utils
@@ -28,6 +28,11 @@ end
 function tests.torepresentation()
   return {utils.torepresentation("dotmap", {1, 2, 3})}, {"dotmap(1,2,3)"}
 end
+
+-- "b"
+-- | s ~ s       ^^ { _ + _ }
+-- | s ~ s ~ s   ^^ { _ + _ + _ }
+-- https://github.com/djspiewak/gll-combinators
 
 function tests.factor_peek_parse_success()
   local A = factor("A", function(A) return
@@ -141,22 +146,28 @@ function tests.any_as_iterator()
   return actual, {2, 3, 4, 5, 6, 7, 8, 9, 10}
 end
 
+function tests.lua_exp_binop()
+  local src = "zzz(1) % 1"
+  local rest, values = lua.Exp(src, 1)
+  return {rest, values}, {#src + 1, src}
+end
+
 function tests.lua_string_parse_success()
   local src = '"hello world!"'
   local rest, values = lua.LiteralString(src, 1)
-  return {rest, unpack(values or {})}, {#src + 1, '"', "hello world!", '"'}
+  return {rest, unpack(values or {})}, {#src + 1, "hello world!"}
 end
 
 function tests.lua_exp_parse_success()
   local src = '"hello world!"'
   local rest, values = lua.Exp(src, 1)
-  return {rest, unpack(values or {})}, {#src + 1, '"', "hello world!", '"'}
+  return {rest, unpack(values or {})}, {#src + 1, "hello world!"}
 end
 
 function tests.lua_exp1_parse_success()
   local src = '1+1'
   local rest, values = lua.Exp(src, 1)
-  return {rest, unpack(values or {})}, {#src + 1, 1, "+", 1}
+  return {rest, unpack(values or {})}, {#src + 1, 1, " + ", 1}
 end
 
 function tests.lua_var_parse_success()
@@ -174,7 +185,7 @@ end
 function tests.lua_args_parse_success()
   local src = '(1)'
   local rest, values = lua.PrefixExp(src, 1)
-  return {rest, unpack(values or {})}, {#src + 1, "(", 1, ")"}
+  return {rest, values}, {#src + 1, src}
 end
 
 function tests.lua_args2_parse_success()
@@ -193,8 +204,8 @@ end
 function tests.lua_functioncall_parse_success()
   local src = 'print(1)'
   local rest, values = lua.FunctionCall(src, 1)
-  return {rest, values[1], values[2][1], values[2][2][1], values[2][3]},
-    {#src + 1, "print", "(", 1, ")"}
+  return {rest, values},
+    {#src + 1, src}
 end
 
 function tests.lua_functioncall2_parse_success()
@@ -369,35 +380,12 @@ function tests.lua_big_parse3()
   return {rest}, {#invariant + 1}
 end
 
-function tests.lua_customize()
-  local Lua = require("leftry.language.lua")()
-  -- Add data initializer for UnOp
-  function Lua.UnOp.initializer(value, self, position, rest, choice)
-    assert(value == "-")
-    return "a"
-  end
-  local rest, value = Lua.UnOp("-", 1)
-  return {rest, value}, {2, "a"}
-end
-
-function tests.lua_customize1()
-  local Lua = require("leftry.language.lua")()
-  -- Add data initializer for UnOp for the first alternative of UnOp.
-  Lua.UnOp[1].initializer = function(value, self, position, rest)
-    assert(value == "-")
-    return "a"
-  end
-  local rest, value = Lua.UnOp("-", 1)
-  return {rest, value}, {2, "a"}
-end
-
-
 local function compare(actual, expected)
   assert(actual) assert(expected)
   local passed = true
   for i=1, math.max(table.maxn(actual), table.maxn(expected)) do
     local value = actual[i]
-    if value == expected[i] then
+    if tostring(value) == tostring(expected[i]) then
       -- print(("  passed %s == %s"):format(
       --   tostring(value),
       --   tostring(expected[i])))

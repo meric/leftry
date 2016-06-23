@@ -23,6 +23,14 @@ local function map(f, t)
   return u
 end
 
+local function each(f, t)
+  local u = {}
+  for k, v in pairs(t) do
+    u[k]=f(v, k)
+  end
+  return u
+end
+
 local function filter(f, t)
   local u = {}
   for i=1, #t do
@@ -83,5 +91,6 @@ return {
     keys=keys,
     copy=copy,
     contains=contains,
-    reverse=reverse
+    reverse=reverse,
+    each=each,
 }

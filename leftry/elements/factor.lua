@@ -143,7 +143,7 @@ function factor:left(invariant, position, peek, expect, exclude)
   if not prefix_rest then
     return
   elseif prefix_rest == expect then
-    return prefix_rest, peek and
+    return prefix_rest, not peek and
       self.initializer(value, self, position, prefix_rest, choice) or nil
   end
 
