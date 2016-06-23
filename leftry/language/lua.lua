@@ -12,11 +12,10 @@ local factor = grammar.factor
 local term = grammar.term
 
 
-local r = each(
+local r = each(function(v, k) return
    -- Define the Lua syntax tree representations, and corresponding output
    -- format using `ast.reduce`.
-   function(v, k)
-    return ast.reduce(k,
+    ast.reduce(k,
       type(v) ~= "function" and v or false,
       type(v) == "function" and v or nil)
   end, {
@@ -31,8 +30,8 @@ local r = each(
   lua_elseif = {" elseif ", condition=2, " then ", block=4},
   lua_else = {" else ", block=2},
   lua_elseifs = function(self) return
-    table.concat(" ", map(tostring, self))
-  end,
+      table.concat(" ", map(tostring, self))
+    end,
   lua_for = {"for ", var=2, "=", initial=4, ",", limit=6, step=7, " do ",
              block=9, " end"},
   lua_step = {",", step=2},
@@ -104,7 +103,10 @@ local lua_semicolon = ast.const("lua_semicolon", ";")
 
 local lua_number = ast.id("lua_number")
 local lua_string = ast.id("lua_string", "value", function(self)
-  return "\"" .. self.value:gsub("\\", "\\\\"):gsub("\"", "\\\""):gsub("\n", "\\n") .. "\""
+  return "\""..self.value
+    :gsub("\\", "\\\\")
+    :gsub("\"", "\\\"")
+    :gsub("\n", "\\n").."\""
 end)
 local lua_chunk = ast.id("lua_chunk", "block")
 local lua_binop = ast.id("lua_binop", "value", function(self)
@@ -164,7 +166,7 @@ end)
 local initializers = require("leftry.initializers")
 local reducers = require("leftry.reducers")
 
-local id, none, metatable = initializers.id, initializers.none, initializers.metatable
+local none =initializers.none
 local leftflat = initializers.leftflat
 local rightflat = initializers.rightflat
 local first = reducers.first
@@ -512,7 +514,52 @@ local exports = {
   term=term,
   factor=factor,
   spaces=spaces,
-  is_space=is_space
+  is_space=is_space,
+  lua_assign = lua_assign,
+  lua_dot = lua_dot,
+  lua_index = lua_index,
+  lua_goto = lua_goto,
+  lua_do = lua_do,
+  lua_while = lua_while,
+  lua_repeat = lua_repeat,
+  lua_if = lua_if,
+  lua_elseif = lua_elseif,
+  lua_else = lua_else,
+  lua_elseifs = lua_elseifs,
+  lua_for = lua_for,
+  lua_step = lua_step,
+  lua_for_in = lua_for_in,
+  lua_function = lua_function,
+  lua_lambda_function = lua_lambda_function,
+  lua_local_function = lua_local_function,
+  lua_retstat = lua_retstat,
+  lua_label = lua_label,
+  lua_binop_exp = lua_binop_exp,
+  lua_unop_exp = lua_unop_exp,
+  lua_functioncall = lua_functioncall,
+  lua_colon_functioncall = lua_colon_functioncall,
+  lua_args = lua_args,
+  lua_table_args = lua_table_args,
+  lua_funcbody = lua_funcbody,
+  lua_paren_exp = lua_paren_exp,
+  lua_local = lua_local,
+  lua_varlist = lua_varlist,
+  lua_namelist = lua_namelist,
+  lua_explist = lua_explist,
+  lua_block = lua_block,
+  lua_funcname = lua_funcname,
+  lua_fieldlist = lua_fieldlist,
+  lua_nil = lua_nil,
+  lua_true = lua_true,
+  lua_false = lua_false,
+  lua_break = lua_break,
+  lua_vararg = lua_vararg,
+  lua_semicolon = lua_semicolon,
+  lua_number = lua_number,
+  lua_string = lua_string,
+  lua_chunk = lua_chunk,
+  lua_binop = lua_binop,
+  lua_unop = lua_unop,
 }
 
 for k, v in pairs(exports) do
