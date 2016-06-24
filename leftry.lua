@@ -47,7 +47,7 @@ local function gfind(invariant, entry, nonterminal, predicate)
     end
     return
   end
-  entry(invariant, 1, true)
+  entry(invariant, 1)
   nonterminal.initializer = initializer
   local i = -1
   return function()
