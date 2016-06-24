@@ -58,17 +58,10 @@ function factor:actualize()
   self.actualize = function() end
 end
 
-function factor:alias(invariant, position, peek, expect, exclude, skip)
-  -- Discard additional returns by explict assignment.
-  local rest, value = self.canon(invariant, position, peek, expect, exclude,
-    skip)
-  return rest, value
-end
-
 function factor:wrap(invariant, position, peek, expect, exclude, skip)
   local rest, value, choice = self.canon(invariant, position, peek, expect,
     exclude, skip)
-  if not peek and rest then
+  if not peek and rest and rawget(self, "initializer") then
     return rest, self.initializer(value, self, position, rest, choice)
   end
   return rest, value
@@ -143,8 +136,8 @@ function factor:left(invariant, position, peek, expect, exclude)
   if not prefix_rest then
     return
   elseif prefix_rest == expect then
-    return prefix_rest, not peek and
-      self.initializer(value, self, position, prefix_rest, choice) or nil
+    return prefix_rest, not peek and self.initializer(value, self, position,
+      prefix_rest, choice) or nil
   end
 
   local skip = self.left_nonterminals
@@ -210,10 +203,8 @@ function factor:call(invariant, position, peek, expect, exclude)
   end
   if search_left_nonterminal(self.canon, self) then
     self.call = self.left
-  elseif self.initializer ~= factor.initializer then
-    self.call = self.wrap
   else
-    self.call = self.alias
+    self.call = self.wrap
   end
   return self:call(invariant, position, peek, expect, exclude)
 end

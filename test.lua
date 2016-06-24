@@ -7,9 +7,10 @@ local span = leftry.span
 local opt = leftry.opt
 local rep = leftry.rep
 local any = leftry.any
+local term = leftry.term
 local factor = leftry.factor
-local tests = {}
 
+local tests = {}
 
 --[[
 
@@ -28,11 +29,6 @@ end
 function tests.torepresentation()
   return {utils.torepresentation("dotmap", {1, 2, 3})}, {"dotmap(1,2,3)"}
 end
-
--- "b"
--- | s ~ s       ^^ { _ + _ }
--- | s ~ s ~ s   ^^ { _ + _ + _ }
--- https://github.com/djspiewak/gll-combinators
 
 function tests.factor_peek_parse_success()
   local A = factor("A", function(A) return
@@ -364,9 +360,7 @@ function tests.lua_big_parse2()
   local f = io.open("leftry/language/lua.lua")
   local invariant = f:read("*all")
   f.close()
-
   local rest = lua.Chunk(invariant, 1)
-
   return {rest}, {#invariant + 1}
 end
 
@@ -378,6 +372,43 @@ function tests.lua_big_parse3()
   local rest = lua.Chunk(invariant, 1)
 
   return {rest}, {#invariant + 1}
+end
+
+function tests.gfind()
+  local match = leftry.match
+  local gfind = leftry.gfind
+  local find = leftry.find
+  local gmatch = leftry.gmatch
+
+  local f = io.open("test.lua")
+  local invariant = f:read("*a")
+  f:close()
+
+  local span = lua.span
+
+  return {
+    match(invariant, lua.Chunk, lua.Stat,
+      span("local", lua.NameList, "=", span("require", lua.Args)) %
+        function(values, value, i)
+          if i == 2 then
+            return value
+          else
+            return values
+          end
+        end, 1),
+    find(invariant, lua.Chunk, lua.Stat,
+      span("local", lua.NameList, "=", span("require", lua.Args)), 1),
+    find(invariant, lua.Chunk, lua.Stat),
+    type(gfind(invariant, lua.Chunk, lua.FunctionCall, term("table"))),
+    type(gmatch(invariant, lua.Chunk, lua.Stat,
+    span("local", lua.NameList, "=", span("require", lua.Args)) %
+      function(values, value, i)
+        if i == 2 then
+          return value
+        else
+          return values
+        end
+      end))}, {"leftry", 1, 1, "function", "function"}
 end
 
 local function compare(actual, expected)
