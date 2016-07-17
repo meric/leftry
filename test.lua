@@ -1,6 +1,7 @@
 local leftry = require("leftry")
 local lua = require("leftry.language.lua")
 local traits = require("leftry.elements.traits")
+local reducers = require("leftry.reducers")
 
 local utils = leftry.utils
 local span = leftry.span
@@ -9,6 +10,7 @@ local rep = leftry.rep
 local any = leftry.any
 local term = leftry.term
 local factor = leftry.factor
+local first = reducers.first
 
 local tests = {}
 
@@ -374,41 +376,50 @@ function tests.lua_big_parse3()
   return {rest}, {#invariant + 1}
 end
 
-function tests.gfind()
-  local match = leftry.match
-  local gfind = leftry.gfind
-  local find = leftry.find
-  local gmatch = leftry.gmatch
+local function remainder(invariant)
+  return #invariant.source
+end
 
+function tests.factor_match()
   local f = io.open("test.lua")
-  local invariant = f:read("*a")
+  local text = f:read("*a")
   f:close()
-
-  local span = lua.span
-
   return {
-    match(invariant, lua.Chunk, lua.Stat,
-      span("local", lua.NameList, "=", span("require", lua.Args)) %
-        function(values, value, i)
-          if i == 2 then
-            return value
-          else
-            return values
-          end
-        end, 1),
-    find(invariant, lua.Chunk, lua.Stat,
-      span("local", lua.NameList, "=", span("require", lua.Args)), 1),
-    find(invariant, lua.Chunk, lua.Stat),
-    type(gfind(invariant, lua.Chunk, lua.FunctionCall, term("table"))),
-    type(gmatch(invariant, lua.Chunk, lua.Stat,
-    span("local", lua.NameList, "=", span("require", lua.Args)) %
-      function(values, value, i)
-        if i == 2 then
-          return value
-        else
-          return values
-        end
-      end))}, {"leftry", 1, 1, "function", "function"}
+    -- Uses exact match, uses pattern to extract value.
+    lua.Chunk:match(text, lua.FunctionCall, term("table")),
+    -- Uses prefix match. returns entire range of nonterminal.
+    text:sub(lua.Chunk:find(text, lua.FunctionCall, term("table")))
+  }, {"table", "table.insert(actual, rest)\n  "}
+end
+
+function tests.gfind()
+  local f = io.open("test.lua")
+  local text = f:read("*a")
+  f:close()
+  local matches = {}
+  -- Uses prefix match. returns entire range of nonterminal.
+  for index, to in lua.Chunk:gfind(text, lua.FunctionCall, term("table")) do
+    table.insert(matches, text:sub(index, to))
+  end
+  return {
+    "table.insert(actual, rest)\n  ",
+    "table.insert(actual, i)\n  ",
+    "table.insert(matches, text:sub(index, to))\n  ",
+    "table.insert(matches, value)\n  "}, matches
+end
+
+function tests.gmatch()
+  local f = io.open("test.lua")
+  local text = f:read("*a")
+  f:close()
+  local matches = {}
+  -- Uses exact match, uses pattern to extract value.
+  for value in lua.Chunk:gmatch(text, lua.Stat,
+      lua.span("local", lua.NameList, "=", "require", lua.Args)
+        % reducers.second) do
+    table.insert(matches, value)
+  end
+  return {"leftry", "lua", "traits", "reducers"}, matches
 end
 
 local function compare(actual, expected)

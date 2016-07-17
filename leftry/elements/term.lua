@@ -21,8 +21,8 @@ function term:__call(invariant, position, peek)
   local count = #constant
   local initializer = self.initializer
   local rest = position + count
-  if position > #invariant or
-    invariant:sub(position, rest - 1) ~= constant then
+  if position > #invariant.source or
+    invariant.source:sub(position, rest - 1) ~= constant then
     return nil
   end
   if initializer and not peek then

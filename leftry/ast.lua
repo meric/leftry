@@ -100,7 +100,7 @@ end
 -- Create an initializer that casts an array (from `leftflat` or `rightflat`)
 -- into this type.
 -- For now, see leftry/language/lua.lua for usage.
-local function cast(name, separator, indices, __tostring)
+local function list(name, separator, indices, __tostring)
   local reverse = {}
   if indices then
     for k, i in pairs(indices) do
@@ -126,7 +126,7 @@ end
 
 
 return {
-  cast = cast,
+  list = list,
   const = const,
   id = id,
   reduce = reduce

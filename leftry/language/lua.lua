@@ -87,12 +87,12 @@ local lua_local = ast.reduce("lua_local", {"local", namelist=2, explist=3},
       }, " ")
   end)
 
-local lua_varlist = ast.cast("lua_varlist", ",")
-local lua_namelist = ast.cast("lua_namelist", ",")
-local lua_explist = ast.cast("lua_explist", ",")
-local lua_block = ast.cast("lua_block", "\n")
-local lua_funcname = ast.cast("lua_funcname")
-local lua_fieldlist = ast.cast("lua_fieldlist", ",")
+local lua_varlist = ast.list("lua_varlist", ",")
+local lua_namelist = ast.list("lua_namelist", ",")
+local lua_explist = ast.list("lua_explist", ",")
+local lua_block = ast.list("lua_block", "\n")
+local lua_funcname = ast.list("lua_funcname")
+local lua_fieldlist = ast.list("lua_fieldlist", ",")
 
 local lua_nil = ast.const("lua_nil", "nil")
 local lua_true = ast.const("lua_true", "true")
@@ -209,7 +209,7 @@ Comment = factor("Comment", function() return
     if LongString(invariant, position, true) then
       position, value = LongString(invariant, position, peek)
     else
-      while invariant:sub(position, position) ~= "\n" do
+      while invariant.source:sub(position, position) ~= "\n" do
         position = position + 1
       end
     end
@@ -219,7 +219,7 @@ Comment = factor("Comment", function() return
 local spaces = " \t\r\n"
 
 local function spacing(invariant, position, previous, current)
-  local src = invariant
+  local src = invariant.source
   local byte = src:byte(position)
 
   -- Skip whitespace and comments
@@ -347,11 +347,11 @@ LongString = function(invariant, position, peek)
   end
   local level = position - rest - 2
   local endquote = "]"..("="):rep(level) .. "]"
-  local endquotestart, endquoteend = invariant:find(endquote, rest)
+  local endquotestart, endquoteend = invariant.source:find(endquote, rest)
   if not endquotestart then
     return
   end
-  local value = invariant:sub(rest, endquotestart-1)
+  local value = invariant.source:sub(rest, endquotestart-1)
   rest = endquoteend + 1
   if peek then
     return rest
@@ -362,7 +362,7 @@ end
 -- Functions
 local function stringcontent(quotechar)
   return function(invariant, position)
-    local src = invariant
+    local src = invariant.source
     local limit = #src
     if position > limit then
       return
@@ -382,7 +382,7 @@ local function stringcontent(quotechar)
       if not escaped then
         table.insert(value, byte)
       end
-      byte = string.char(invariant:byte(i))
+      byte = string.char(invariant.source:byte(i))
       if byte == quotechar and not escaped then
         return i, table.concat(value)
       end
@@ -396,7 +396,7 @@ squoted = stringcontent("\'")
 
 Numeral = function(invariant, position, peek)
   local sign, numbers = position
-  local src = invariant
+  local src = invariant.source
   local byte = src:byte(position)
   local dot, zero, nine, minus = 46, 48, 57, 45
   if byte == minus then
@@ -449,7 +449,7 @@ local keywords = {
 Name = function(invariant, position, peek)
   local underscore, alpha, zeta, ALPHA, ZETA = 95, 97, 122, 65, 90
   local zero, nine = 48, 57
-  local src = invariant
+  local src = invariant.source
   local byte = src:byte(position)
 
   if not isalpha(byte) then

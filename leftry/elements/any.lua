@@ -1,5 +1,6 @@
 local utils = require("leftry.utils")
 local termize = require("leftry.elements.utils").termize
+local invariantize = require("leftry.elements.utils").invariantize
 local traits = require("leftry.elements.traits")
 local memoize = require("leftry.immutable.memoize")
 local hash = traits.hash
@@ -40,10 +41,11 @@ end
 local _search_left_nonterminals = memoize(search_left_nonterminals, 2)
 
 function any:__call(invariant, position, peek, expect, exclude, nonterminals)
-  if position > #invariant then
+  invariant = invariantize(invariant)
+  if position > #invariant.source then
     return
   end
-  local alts = (self.cache or self:index())[invariant:byte(position)]
+  local alts = (self.cache or self:index())[invariant.source:byte(position)]
   for i=1, #alts do
     if not exclude or not exclude[alts[i]] then
       -- Note: A `rep` element in `any` acts like a non-optional element.

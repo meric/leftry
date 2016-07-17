@@ -1,5 +1,6 @@
 local opt = require("leftry.elements.opt")
 local termize = require("leftry.elements.utils").termize
+local invariantize = require("leftry.elements.utils").invariantize
 local utils = require("leftry.utils")
 local traits = require("leftry.elements.traits")
 local any = require("leftry.elements.any")
@@ -71,7 +72,7 @@ function factor:measure(invariant, rest, exclude, skip)
   local sections
   local done = rest
   local recursions = self.recursions
-  local length = #invariant
+  local length = #invariant.source
 
   while rest and length >= rest do
     local position = rest
@@ -123,8 +124,7 @@ function factor.trace(top, invariant, skip, sections)
 end
 
 function factor:left(invariant, position, peek, expect, exclude)
-
-  if position > #invariant then
+  if position > #invariant.source then
     return
   end
 
@@ -148,6 +148,9 @@ function factor:left(invariant, position, peek, expect, exclude)
   end
 
   if peek then
+    if invariant.subscribers and invariant.subscribers[self] then
+      invariant.subscribers[self](self, position, rest, peek)
+    end
     return rest
   end
 
@@ -190,6 +193,9 @@ function factor:left(invariant, position, peek, expect, exclude)
     end
     value = top.initializer(value, self, position, rest, path.choice)
   end
+  if invariant.subscribers and invariant.subscribers[self] then
+    invariant.subscribers[self](self, position, rest, peek)
+  end
   return rest, value
 end
 
@@ -210,10 +216,99 @@ function factor:call(invariant, position, peek, expect, exclude)
 end
 
 function factor:__call(invariant, position, peek, expect, exclude, skip)
+  invariant = invariantize(invariant)
+  local rest, value
   if skip and skip[self] then
-    return self.canon(invariant, position, peek, expect, exclude, skip)
+    rest, value = self.canon(invariant, position, peek, expect, exclude, skip)
+  else
+    rest, value = self:call(invariant, position, peek, expect, exclude)
   end
-  return self:call(invariant, position, peek, expect, exclude)
+  if rest and invariant.events[self] then
+    invariant.events[self](position, rest, value, peek)
+  end
+  return rest, value
+end
+
+function factor:match(text, nonterminal, pattern, index)
+  assert(type(text) == "string")
+  pattern = pattern or nonterminal
+  local invariant = invariantize(text)
+  local matched
+  self({
+    source=text,
+    events={
+      [nonterminal] = function(position, rest)
+        if matched == nil and position >= (index or 1) then
+          if pattern(invariant, position, true) then
+            matched = select(2, pattern(invariant, position))
+          end
+        end
+      end
+    }}, 1, true)
+  return matched
+end
+
+function factor:find(text, nonterminal, pattern, from)
+  assert(type(text) == "string")
+  pattern = pattern or nonterminal
+  local invariant = invariantize(text)
+  local index, to
+  self({
+    source=text,
+    events={
+      [nonterminal] = function(position, rest)
+        if index == nil and position >= (from or 1) then
+          if pattern(invariant, position, true) then
+            index = position
+            to = rest - 1
+          end
+        end
+      end
+    }}, 1, true)
+  return index, to
+end
+
+function factor:gfind(text, nonterminal, pattern)
+  pattern = pattern or nonterminal
+  local invariant = invariantize(text)
+  local thread = coroutine.create(function()
+
+    self({source=text, events={
+      [nonterminal] = function(position, rest)
+        if pattern(invariant, position, true) then
+          coroutine.yield(position, rest - 1)
+        end
+      end}
+    }, 1, true)
+  end)
+  return function()
+
+    local ok, position, rest = coroutine.resume(thread)
+    -- print(ok, "hello", position, rest)
+    if ok then
+      return position, rest
+    end
+  end
+end
+
+function factor:gmatch(text, nonterminal, pattern)
+  pattern = pattern or nonterminal
+  local invariant = invariantize(text)
+  local thread = coroutine.create(function()
+    self({source=text, events={
+      [nonterminal] = function(position, rest)
+        if pattern(invariant, position, true) then
+          coroutine.yield(select(2, pattern(invariant, position)))
+        end
+      end}
+    }, 1, true)
+  end)
+  return function()
+    local ok, position, rest = coroutine.resume(thread)
+    if ok then
+      return position, rest
+    end
+  end
 end
 
 return factor

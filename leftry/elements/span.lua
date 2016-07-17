@@ -1,5 +1,6 @@
 local opt = require("leftry.elements.opt")
 local termize = require("leftry.elements.utils").termize
+local invariantize = require("leftry.elements.utils").invariantize
 local utils = require("leftry.utils")
 local factor = require("leftry.elements.factor")
 local traits = require("leftry.elements.traits")
@@ -42,8 +43,8 @@ end
 
 function span:__call(invariant, position, peek, expect, met, nonterminals,
     given_rest, given_value)
-
-  if position > #invariant or met and met[self[1]] then
+  invariant = invariantize(invariant)
+  if position > #invariant.source or met and met[self[1]] then
     return
   end
 

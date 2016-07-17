@@ -7,6 +7,14 @@ local termize = function(value)
   return value
 end
 
+local invariantize = function(value)
+  if type(value) == "string" then
+    return {source=value, events={}}
+  end
+  return value
+end
+
 return {
-  termize=termize
+  termize=termize,
+  invariantize=invariantize
 }
