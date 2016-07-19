@@ -15,6 +15,13 @@ local function dotmap(f, ...)
   end
 end
 
+local function escape(text)
+  return "\""..text
+    :gsub("\\", "\\\\")
+    :gsub("\"", "\\\"")
+    :gsub("\n", "\\n").."\""
+end
+
 local function map(f, t)
   local u = {}
   for i=1, #t do
@@ -93,4 +100,5 @@ return {
     contains=contains,
     reverse=reverse,
     each=each,
+    escape=escape
 }

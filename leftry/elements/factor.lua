@@ -233,14 +233,14 @@ function factor:match(text, nonterminal, pattern, index)
   assert(type(text) == "string")
   pattern = pattern or nonterminal
   local invariant = invariantize(text)
-  local matched
+  local matched, index
   self({
     source=text,
     events={
       [nonterminal] = function(position, rest)
         if matched == nil and position >= (index or 1) then
           if pattern(invariant, position, true) then
-            matched = select(2, pattern(invariant, position))
+            matched, index = select(2, pattern(invariant, position)), position
           end
         end
       end
@@ -298,7 +298,7 @@ function factor:gmatch(text, nonterminal, pattern)
     self({source=text, events={
       [nonterminal] = function(position, rest)
         if pattern(invariant, position, true) then
-          coroutine.yield(select(2, pattern(invariant, position)))
+          coroutine.yield(select(2, pattern(invariant, position)), position)
         end
       end}
     }, 1, true)

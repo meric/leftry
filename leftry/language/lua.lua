@@ -49,7 +49,9 @@ local r = each(function(v, k) return
   lua_args = {"(", explist=2, ")" },
   lua_table_args = {"{", fieldlist=2, "}"},
   lua_funcbody = {"(", namelist=2, ")", block=4, " end"},
-  lua_paren_exp = {"(", exp=2, ")"}
+  lua_paren_exp = {"(", exp=2, ")"},
+  lua_field_name = {name=1, "=", exp=3},
+  lua_field_key = {"[", key=2, "]", "=", exp=5}
 })
 
 local lua_assign = r.lua_assign
@@ -79,6 +81,8 @@ local lua_args = r.lua_args
 local lua_table_args = r.lua_table_args
 local lua_funcbody = r.lua_funcbody
 local lua_paren_exp = r.lua_paren_exp
+local lua_field_name = r.lua_field_name
+local lua_field_key = r.lua_field_key
 
 local lua_local = ast.reduce("lua_local", {"local", namelist=2, explist=3},
   function(self)
@@ -90,7 +94,7 @@ local lua_local = ast.reduce("lua_local", {"local", namelist=2, explist=3},
 local lua_varlist = ast.list("lua_varlist", ",")
 local lua_namelist = ast.list("lua_namelist", ",")
 local lua_explist = ast.list("lua_explist", ",")
-local lua_block = ast.list("lua_block", "\n")
+local lua_block = ast.list("lua_block", ";")
 local lua_funcname = ast.list("lua_funcname")
 local lua_fieldlist = ast.list("lua_fieldlist", ",")
 
@@ -103,10 +107,7 @@ local lua_semicolon = ast.const("lua_semicolon", ";")
 
 local lua_number = ast.id("lua_number")
 local lua_string = ast.id("lua_string", "value", function(self)
-  return "\""..self.value
-    :gsub("\\", "\\\\")
-    :gsub("\"", "\\\"")
-    :gsub("\n", "\\n").."\""
+  return utils.escape(self.value)
 end)
 local lua_chunk = ast.id("lua_chunk", "block")
 local lua_binop = ast.id("lua_binop", "value", function(self)
@@ -166,7 +167,7 @@ end)
 local initializers = require("leftry.initializers")
 local reducers = require("leftry.reducers")
 
-local none =initializers.none
+local none = initializers.none
 local leftflat = initializers.leftflat
 local rightflat = initializers.rightflat
 local first = reducers.first
@@ -177,7 +178,7 @@ local concat = reducers.concat
 local Chunk, Block, Stat, RetStat, Label, FuncName, VarList, Var, NameList,
       ExpList, Exp, PrefixExp, FunctionCall, Args, FunctionDef, FuncBody,
       ParList, TableConstructor, FieldList, Field, FieldSep, BinOp, UnOp,
-      Numeral, LiteralString, Name, Space, Comment, LongString
+      numeral, Numeral, LiteralString, Name, Space, Comment, LongString
 
 local dquoted, squoted
 
@@ -328,7 +329,8 @@ FieldList = factor("FieldList", function() return
 FieldSep = factor("FieldSep", function() return
   ",", ";" end)
 Field = factor("Field", function() return
-  span("[", Exp, "]", "=", Exp), span(Name, "=", Exp), Exp end)
+  span("[", Exp, "]", "=", Exp) % lua_field_key,
+  span(Name, "=", Exp) % lua_field_name, Exp end)
 BinOp = factor("BinOp", function() return
   "^", "*", "/", "//", "%", "+", "-", "..", "<<", ">>", "&", "|",  "<=",
   ">=", "<", ">", "~=", "==", "and", "or" end, lua_binop)
@@ -394,7 +396,7 @@ end
 dquoted = stringcontent("\"")
 squoted = stringcontent("\'")
 
-Numeral = function(invariant, position, peek)
+numeral = function(invariant, position, peek)
   local sign, numbers = position
   local src = invariant.source
   local byte = src:byte(position)
@@ -422,7 +424,15 @@ Numeral = function(invariant, position, peek)
   if peek then
     return rest
   end
-  return rest, lua_number(tonumber(src:sub(position, rest-1)))
+  return rest, tonumber(src:sub(position, rest-1))
+end
+
+Numeral = function(invariant, position, peek)
+  local rest, value = numeral(invariant, position, peek)
+  if value then
+    value = lua_number(value)
+  end
+  return rest, value
 end
 
 local keywords = {
@@ -479,6 +489,7 @@ Name = function(invariant, position, peek)
 end
 
 local exports = {
+  Lua=Chunk,
   Chunk=Chunk,
   Block=Block,
   Stat=Stat,
@@ -501,8 +512,11 @@ local exports = {
   Field=Field,
   FieldSep=FieldSep,
   BinOp=BinOp,
+  isalphanumeric=isalphanumeric,
+  isalpha=isalpha,
   UnOp=UnOp,
   Numeral=Numeral,
+  numeral=numeral,
   LiteralString=LiteralString,
   Name=Name,
   Space=Space,

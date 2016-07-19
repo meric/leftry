@@ -26,7 +26,24 @@ local index = setmetatable({}, {
   end
 })
 
+local inverse = setmetatable({}, {
+  __index = function(self, invariant)
+    self[invariant] = {}
+    local n = 0
+    local i = 1
+    for rest, line in Line, invariant, i do
+      n = n + 1
+      for j = i, rest do
+        self[invariant][j] = n
+      end
+      i = rest
+    end
+    return self[invariant]
+  end
+})
+
 return {
   index = index,
+  inverse = inverse,
   Line = Line
 }

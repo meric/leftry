@@ -84,6 +84,7 @@ local function id(name, key, __tostring)
   return proto
 end
 
+
 local function const(name, value)
   local constant = {value}
   local proto = prototype(name, function(self)
