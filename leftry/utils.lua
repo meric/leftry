@@ -9,6 +9,10 @@ local function prototype(name, initializer)
   return self
 end
 
+local function hasmetatable(value, mt)
+  return getmetatable(value) == mt
+end
+
 local function dotmap(f, ...)
   if select("#", ...) > 0 then
     return f(select(1, ...)), dotmap(f, select(2, ...))
@@ -100,5 +104,6 @@ return {
     contains=contains,
     reverse=reverse,
     each=each,
-    escape=escape
+    escape=escape,
+    hasmetatable=hasmetatable
 }
