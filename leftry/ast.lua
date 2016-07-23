@@ -122,6 +122,7 @@ local function list(name, separator, indices, __tostring)
     end
   end
   local proto = prototype(name, function(self, obj, _, index, rest)
+    obj.n = obj.n or #obj
     obj = setmetatable(obj, self)
     obj.index = index
     obj.rest = rest
@@ -133,7 +134,7 @@ local function list(name, separator, indices, __tostring)
     end
   end
   proto.__tostring = __tostring or function(self) return
-    table.concat(map(tostring, self), separator or "")
+    table.concat(map(tostring, self, self.n), separator or "")
   end
   return proto
 end

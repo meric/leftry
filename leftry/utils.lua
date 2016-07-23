@@ -22,9 +22,9 @@ local function escape(text)
     :gsub("\n", "\\n").."\""
 end
 
-local function map(f, t)
+local function map(f, t, n)
   local u = {}
-  for i=1, #t do
+  for i=1, n or #t do
     u[i]=f(t[i])
   end
   return u
@@ -38,9 +38,9 @@ local function each(f, t)
   return u
 end
 
-local function filter(f, t)
+local function filter(f, t, n)
   local u = {}
-  for i=1, #t do
+  for i=1, n or #t do
     local x = t[i]
     if f(x) then
       table.insert(u, x)
@@ -49,8 +49,8 @@ local function filter(f, t)
   return u
 end
 
-local function contains(t, u)
-  for i=1, #t do
+local function contains(t, u, n)
+  for i=1, n or #t do
     if t[i] == u then
       return true
     end
