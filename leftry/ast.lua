@@ -9,6 +9,7 @@ local function reduce(name, indices, __tostring)
   local reverse = {}
   local template = {}
   local terms = {}
+  local arguments = {}
   local proto = prototype(name, function(self, values, value, i, _, index, rest)
     if not values then
       values = setmetatable({index=index, rest=rest}, self)
@@ -24,6 +25,7 @@ local function reduce(name, indices, __tostring)
       if type(k) == "string" then
         reverse[i] = k
         template[i] = true
+        table.insert(arguments, {k, i})
       else
         table.insert(terms, {k, i})
       end
@@ -32,6 +34,17 @@ local function reduce(name, indices, __tostring)
     table.sort(terms, function(a, b)
       return a[1] < b[1]
     end)
+    table.sort(arguments, function(a, b)
+      return a[1] > b[1]
+    end)
+
+    function proto.new(...)
+      local self = setmetatable({}, proto)
+      for i, v in ipairs(arguments) do
+        self[v[2]] = select(i, ...)
+      end
+      return self
+    end
 
     for i, v in ipairs(terms) do
       -- Reliable cross-version way to find the nil index.
