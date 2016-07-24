@@ -20,6 +20,13 @@ local function reduce(name, indices, __tostring)
     values.rest = rest
     return values
   end)
+
+  proto.indices = indices
+  proto.reverse = reverse
+  proto.arguments = arguments
+  proto.template = template
+  proto.terms = terms
+
   if indices then
     for k, i in pairs(indices) do
       if type(k) == "string" then
@@ -35,7 +42,7 @@ local function reduce(name, indices, __tostring)
       return a[1] < b[1]
     end)
     table.sort(arguments, function(a, b)
-      return a[1] > b[1]
+      return a[2] < b[2]
     end)
 
     function proto.new(...)
@@ -73,6 +80,19 @@ local function reduce(name, indices, __tostring)
       if indices[index] then
         return self[indices[index]]
       end
+      return proto[index]
+    end
+
+    function proto:__newindex(index, value)
+      if indices[index] then
+        self[indices[index]] = value
+      else
+        rawset(self, index, value)
+      end
+    end
+
+    function proto:repr()
+      return self
     end
   end
   proto.__tostring = __tostring
@@ -90,9 +110,14 @@ local function id(name, key, __tostring)
     if index == (key or "value") then
       return self[1] or ""
     end
+    return proto[index]
   end
   proto.__tostring = __tostring or function(self)
     return tostring(self[1] or "")
+  end
+
+  function proto:repr()
+    return self
   end
   return proto
 end
@@ -106,6 +131,10 @@ local function const(name, value)
   setmetatable(constant, proto)
   function proto:__tostring()
     return tostring(value)
+  end
+
+  function proto:repr()
+    return self
   end
   return proto
 end
@@ -132,7 +161,13 @@ local function list(name, separator, indices, __tostring)
     if indices and indices[index] then
       return tostring(self[indices[index]])
     end
+    return proto[index]
   end
+
+  function proto:repr()
+    return self
+  end
+
   proto.__tostring = __tostring or function(self) return
     table.concat(map(tostring, self, self.n), separator or "")
   end

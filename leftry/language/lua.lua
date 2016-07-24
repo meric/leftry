@@ -26,7 +26,7 @@ local r = each(function(v, k) return
   lua_do = {"do ", block=2, " end"},
   lua_while = {"while ", condition=2, " do ", block=4, " end"},
   lua_repeat = {"repeat ", block=2, " until ", condition=4},
-  lua_if = {" if ", condition=2, " then ", block=4, _elseifs=5, _else=6," end"},
+  lua_if = {"if ", condition=2, " then ", block=4, _elseifs=5, _else=6," end"},
   lua_elseif = {" elseif ", condition=2, " then ", block=4},
   lua_else = {" else ", block=2},
   lua_elseifs = function(self) return
