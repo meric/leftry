@@ -16,6 +16,9 @@ local function leftflat(values, value)
   if not values then
     return value or {}
   end
+  if value ~= nil then
+    values.n = math.max(#values, values.n or 0) + 1
+  end
   return rawset(values, #values + 1, value)
 end
 

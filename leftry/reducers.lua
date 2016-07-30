@@ -14,7 +14,7 @@ local concat = function(a, b, i)
   if not a then
     return tostring(b)
   end
-  return a .. b
+  return tostring(a) .. tostring(b)
 end
 
 return {
