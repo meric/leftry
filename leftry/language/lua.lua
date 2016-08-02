@@ -30,7 +30,7 @@ local r = each(function(v, k) return
   lua_elseif = {" elseif ", condition=2, " then ", block=4},
   lua_else = {" else ", block=2},
   lua_elseifs = function(self) return
-      table.concat(" ", map(tostring, self))
+      table.concat(map(tostring, self), " ")
     end,
   lua_for = {"for ", var=2, "=", initial=4, ",", limit=6, step=7, " do ",
              block=9, " end"},
