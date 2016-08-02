@@ -134,7 +134,7 @@ local function const(name, value)
   end
 
   function proto:repr()
-    return self
+    return tostring(getmetatable(self)).."()"
   end
   return proto
 end
