@@ -143,15 +143,15 @@ end
 -- Create an initializer that casts an array (from `leftflat` or `rightflat`)
 -- into this type.
 -- For now, see leftry/language/lua.lua for usage.
-local function list(name, separator, indices, __tostring)
-  local reverse = {}
-  if indices then
-    for k, i in pairs(indices) do
-      reverse[i] = k
-    end
-  end
+local function list(name, separator, __tostring, validate)
   local proto = prototype(name, function(self, obj, _, index, rest)
     obj.n = obj.n or #obj
+    if validate then
+      local validated = validate(obj)
+      if validated ~= nil then
+        obj = validated
+      end
+    end
     obj = setmetatable(obj, self)
     obj.index = index
     obj.rest = rest
