@@ -102,8 +102,14 @@ end
 -- Create an identity initializer to be used in function parsers and
 -- nonterminals.
 -- For now, see leftry/language/lua.lua for usage.
-local function id(name, key, __tostring)
+local function id(name, key, __tostring, validate)
   local proto = prototype(name, function(self, value)
+    if validate then
+      local validated = validate(value)
+      if validated ~= nil then
+        value = validated
+      end
+    end
     return setmetatable({value}, self)
   end)
   function proto:__index(index)
