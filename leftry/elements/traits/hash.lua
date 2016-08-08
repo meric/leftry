@@ -14,6 +14,8 @@ local contains = utils.contains
 local hash = traits.hash
 local search_left_nonterminal = traits.search_left_nonterminal
 
+local unpack = table.unpack or unpack
+
 local all = function()
   local t = {}
   for i=1, 255 do

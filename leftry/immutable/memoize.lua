@@ -1,4 +1,5 @@
 local reverse = require("leftry.utils").reverse
+local unpack = table.unpack or unpack
 
 local function curry(f, n, ...)
   local curried = {...}

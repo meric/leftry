@@ -13,6 +13,7 @@ local copy = utils.copy
 local filter = utils.filter
 local search_left_nonterminal = traits.search_left_nonterminal
 local left_nonterminals = traits.left_nonterminals
+local unpack = table.unpack or unpack
 
 local factor = prototype("factor", function(self, name, canonize, initializer)
   return setmetatable({
