@@ -2,6 +2,8 @@ local utils = require("leftry.utils")
 local prototype = utils.prototype
 local map = utils.map
 
+local unpack = table.unpack or unpack
+
 
 -- Create a reducer to be used with `span`.
 -- For now, see leftry/language/lua.lua for usage.
@@ -26,6 +28,18 @@ local function reduce(name, indices, __tostring)
   proto.arguments = arguments
   proto.template = template
   proto.terms = terms
+
+  function proto:gsub(pattern, f)
+    if proto == pattern then
+      return f(self)
+    end
+    local args = {}
+    for i, v in ipairs(arguments) do
+      args[i] = self[v[2]]:gsub(pattern, f)
+    end
+    return proto.new(unpack(args))
+  end
+
 
   if indices then
     for k, i in pairs(indices) do
@@ -94,6 +108,16 @@ local function reduce(name, indices, __tostring)
     function proto:repr()
       return self
     end
+
+    function proto:copy()
+      local t = setmetatable({}, proto)
+      for i, v in ipairs(arguments) do
+        if self[v[2]] ~= nil then
+          t[v[2]] = self[v[2]]:copy()
+        end
+      end
+      return t
+    end
   end
   proto.__tostring = __tostring
   return proto
@@ -124,6 +148,17 @@ local function id(name, key, __tostring, validate)
 
   function proto:repr()
     return self
+  end
+
+  function proto:gsub(pattern, f)
+    if proto == pattern then
+      return f(self)
+    end
+    return self
+  end
+
+  function proto:copy()
+    return proto(self[1])
   end
   return proto
 end
@@ -161,6 +196,7 @@ local function list(name, separator, __tostring, validate)
     obj = setmetatable(obj, self)
     obj.index = index
     obj.rest = rest
+    obj.n = obj.n or #obj
     return obj
   end)
   function proto:__index(index)
@@ -172,6 +208,30 @@ local function list(name, separator, __tostring, validate)
 
   function proto:repr()
     return self
+  end
+
+  function proto:gsub(pattern, f)
+    local obj = {n=self.n}
+    for i=1, self.n do
+      if type(self[i]) == "string" then
+        if pattern == "string" then
+          obj[i] = f(self[i])
+        else
+          obj[i] = self[i]
+        end
+      else
+        obj[i]=self[i]:gsub(pattern, f)
+      end
+    end
+    return proto(obj)
+  end
+
+  function proto:copy()
+    local t = {n=self.n}
+    for i=1, self.n do
+      t[i] = self[i]:copy()
+    end
+    return proto(t, nil, self.index, self.rest)
   end
 
   proto.__tostring = __tostring or function(self) return
