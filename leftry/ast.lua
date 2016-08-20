@@ -29,15 +29,24 @@ local function reduce(name, indices, __tostring)
   proto.template = template
   proto.terms = terms
 
-  function proto:gsub(pattern, f)
-    if proto == pattern then
-      return f(self)
+  function proto:gsub(pattern, f, g)
+    if proto == pattern and (not g or g(self)) then
+      return f(self, self)
     end
     local args = {}
     for i, v in ipairs(arguments) do
-      args[i] = self[v[2]]:gsub(pattern, f)
+      if self[v[2]] then
+        if utils.hasmetatable(self[v[2]], pattern) and
+            (not g or g(self[v[2]])) then
+          args[i] = f(self[v[2]], self, v[2])
+        elseif self[v[2]].gsub then
+          args[i] = self[v[2]]:gsub(pattern, f, g)
+        else
+          args[i] = self[v[2]]
+        end
+      end
     end
-    return proto.new(unpack(args))
+    return proto.new(unpack(args, 1, #arguments))
   end
 
 
@@ -109,11 +118,21 @@ local function reduce(name, indices, __tostring)
       return self
     end
 
+    function proto:__eq(other)
+      return tostring(self) == tostring(other)
+    end
+
     function proto:copy()
       local t = setmetatable({}, proto)
       for i, v in ipairs(arguments) do
-        if self[v[2]] ~= nil then
-          t[v[2]] = self[v[2]]:copy()
+        if type(self[i]) == "string" then
+          t[v[2]] = self[v[2]]
+        elseif self[v[2]] then
+          if self[v[2]].copy then
+            t[v[2]] = self[v[2]]:copy()
+          else
+            t[v[2]] = self[v[2]]
+          end
         end
       end
       return t
@@ -136,12 +155,14 @@ local function id(name, key, __tostring, validate)
     end
     return setmetatable({value}, self)
   end)
+
   function proto:__index(index)
     if index == (key or "value") then
       return self[1] or ""
     end
     return proto[index]
   end
+
   proto.__tostring = __tostring or function(self)
     return tostring(self[1] or "")
   end
@@ -150,9 +171,9 @@ local function id(name, key, __tostring, validate)
     return self
   end
 
-  function proto:gsub(pattern, f)
-    if proto == pattern then
-      return f(self)
+  function proto:gsub(pattern, f, g)
+    if proto == pattern and (not g or g(self)) then
+      return f(self, self)
     end
     return self
   end
@@ -176,6 +197,13 @@ local function const(name, value)
 
   function proto:repr()
     return tostring(getmetatable(self)).."()"
+  end
+
+  function proto:gsub(pattern, f, g)
+    if proto == pattern and (not g or g(self)) then
+      return f(self, self)
+    end
+    return self
   end
   return proto
 end
@@ -210,17 +238,22 @@ local function list(name, separator, __tostring, validate)
     return self
   end
 
-  function proto:gsub(pattern, f)
+  function proto:gsub(pattern, f, g)
     local obj = {n=self.n}
     for i=1, self.n do
       if type(self[i]) == "string" then
         if pattern == "string" then
-          obj[i] = f(self[i])
+          obj[i] = f(self[i], self, i)
         else
           obj[i] = self[i]
         end
+      elseif utils.hasmetatable(self[i], pattern) and
+          (not g or g(self[i])) then
+        obj[i] = f(self[i], self, i)
+      elseif self[i] and self[i].gsub then
+        obj[i]=self[i]:gsub(pattern, f, g)
       else
-        obj[i]=self[i]:gsub(pattern, f)
+        obj[i]=self[i]
       end
     end
     return proto(obj)
@@ -229,9 +262,39 @@ local function list(name, separator, __tostring, validate)
   function proto:copy()
     local t = {n=self.n}
     for i=1, self.n do
-      t[i] = self[i]:copy()
+      if type(self[i]) == "string" then
+        t[i] = self[i]
+      else
+        if self[i] and self[i].copy then
+          t[i] = self[i]:copy()
+        else
+          t[i] = self[i]
+        end
+      end
     end
+
     return proto(t, nil, self.index, self.rest)
+  end
+
+  function proto:insert(value)
+    self.n = self.n + 1
+    self[self.n] = value
+    return self
+  end
+
+  function proto:__eq(other)
+    return tostring(self) == tostring(other)
+  end
+
+
+  function proto:next(i)
+    if i < self.n then
+      return i + 1, self[i + 1]
+    end
+  end
+
+  function proto:__ipairs()
+    return proto.next, self, 0
   end
 
   proto.__tostring = __tostring or function(self) return
