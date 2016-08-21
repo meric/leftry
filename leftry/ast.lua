@@ -39,7 +39,7 @@ local function reduce(name, indices, __tostring)
         if utils.hasmetatable(self[v[2]], pattern) and
             (not g or g(self[v[2]])) then
           args[i] = f(self[v[2]], self, v[2])
-        elseif self[v[2]].gsub then
+        elseif type(self[v[2]]) == "table" and self[v[2]].gsub then
           args[i] = self[v[2]]:gsub(pattern, f, g)
         else
           args[i] = self[v[2]]
