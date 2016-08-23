@@ -30,6 +30,8 @@ local function reduce(name, indices, __tostring)
   proto.terms = terms
 
   function proto:gsub(pattern, f, g)
+    -- In-place substitution. Highly recommended to make a :copy() before
+    -- calling gsub.
     if proto == pattern and (not g or g(self)) then
       return f(self, self)
     end
@@ -38,15 +40,13 @@ local function reduce(name, indices, __tostring)
       if self[v[2]] then
         if utils.hasmetatable(self[v[2]], pattern) and
             (not g or g(self[v[2]])) then
-          args[i] = f(self[v[2]], self, v[2])
+          self[v[2]] = f(self[v[2]], self, v[2])
         elseif type(self[v[2]]) == "table" and self[v[2]].gsub then
-          args[i] = self[v[2]]:gsub(pattern, f, g)
-        else
-          args[i] = self[v[2]]
+          self[v[2]] = self[v[2]]:gsub(pattern, f, g)
         end
       end
     end
-    return proto.new(unpack(args, 1, #arguments))
+    return self
   end
 
 
@@ -239,24 +239,21 @@ local function list(name, separator, __tostring, validate)
   end
 
   function proto:gsub(pattern, f, g)
-    local obj = {n=self.n}
     for i=1, self.n do
       if type(self[i]) == "string" then
         if pattern == "string" then
-          obj[i] = f(self[i], self, i)
+          self[i] = f(self[i], self, i)
         else
-          obj[i] = self[i]
+          self[i] = self[i]
         end
       elseif utils.hasmetatable(self[i], pattern) and
           (not g or g(self[i])) then
-        obj[i] = f(self[i], self, i)
+        self[i] = f(self[i], self, i)
       elseif self[i] and self[i].gsub then
-        obj[i]=self[i]:gsub(pattern, f, g)
-      else
-        obj[i]=self[i]
+        self[i]=self[i]:gsub(pattern, f, g)
       end
     end
-    return proto(obj)
+    return self
   end
 
   function proto:copy()
