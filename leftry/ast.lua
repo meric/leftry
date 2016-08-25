@@ -178,6 +178,10 @@ local function id(name, key, __tostring, validate)
     return self
   end
 
+  function proto:__eq(p)
+    return getmetatable(self) == getmetatable(p) and self[1] == p[1]
+  end
+
   function proto:copy()
     return proto(self[1])
   end
@@ -249,7 +253,7 @@ local function list(name, separator, __tostring, validate)
       elseif utils.hasmetatable(self[i], pattern) and
           (not g or g(self[i])) then
         self[i] = f(self[i], self, i)
-      elseif self[i] and self[i].gsub then
+      elseif type(self[i]) == "table" and self[i].gsub then
         self[i]=self[i]:gsub(pattern, f, g)
       end
     end
