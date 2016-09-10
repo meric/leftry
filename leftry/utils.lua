@@ -1,3 +1,26 @@
+local __ipairs = ipairs
+local ipairs = ipairs
+local len = function(t)
+  return #t
+end
+
+if _G["loadstring"] then
+  ipairs = function(t)
+    local mt = getmetatable(t)
+    if not mt or not mt.__ipairs then
+      return __ipairs(t)
+    end
+    return mt.__ipairs(t)
+  end
+  len = function(t)
+    local mt = getmetatable(t)
+    if not mt or not mt.__len then
+      return #t
+    end
+    return mt.__len(t)
+  end
+end
+
 local function prototype(name, initializer)
   local self = setmetatable({}, {
     __tostring = function(self)
@@ -28,7 +51,7 @@ end
 
 local function map(f, t, n)
   local u = {}
-  for i=1, n or #t do
+  for i=1, n or len(t) do
     u[i]=f(t[i])
   end
   return u
@@ -44,7 +67,7 @@ end
 
 local function filter(f, t, n)
   local u = {}
-  for i=1, n or #t do
+  for i=1, n or len(t) do
     local x = t[i]
     if f(x) then
       table.insert(u, x)
@@ -54,7 +77,7 @@ local function filter(f, t, n)
 end
 
 local function contains(t, u, n)
-  for i=1, n or #t do
+  for i=1, n or len(t) do
     if t[i] == u then
       return true
     end
@@ -64,7 +87,7 @@ end
 function reverse(t)
   local u = {}
   for k, v in ipairs(t) do
-      u[#t + 1 - k] = v
+      u[len(t) + 1 - k] = v
   end
   return u
 end
@@ -94,16 +117,18 @@ local function torepresentation(callable, arguments)
 end
 
 return {
-    prototype=prototype,
-    dotmap=dotmap,
-    map=map,
-    filter=filter,
-    torepresentation=torepresentation,
-    keys=keys,
-    copy=copy,
-    contains=contains,
-    reverse=reverse,
-    each=each,
-    escape=escape,
-    hasmetatable=hasmetatable
+  prototype=prototype,
+  ipairs = ipairs,
+  len=len,
+  dotmap=dotmap,
+  map=map,
+  filter=filter,
+  torepresentation=torepresentation,
+  keys=keys,
+  copy=copy,
+  contains=contains,
+  reverse=reverse,
+  each=each,
+  escape=escape,
+  hasmetatable=hasmetatable
 }
