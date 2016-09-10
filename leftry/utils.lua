@@ -1,10 +1,12 @@
 local __ipairs = ipairs
+
 local ipairs = ipairs
+
 local len = function(t)
   return #t
 end
 
-if _G["loadstring"] then
+if ipairs(setmetatable({}, {__ipairs=function() end})) == ipairs({}) then
   ipairs = function(t)
     local mt = getmetatable(t)
     if not mt or not mt.__ipairs then
@@ -12,6 +14,9 @@ if _G["loadstring"] then
     end
     return mt.__ipairs(t)
   end
+end
+
+if #setmetatable({}, {__len=function() return 5 end}) == 0 then
   len = function(t)
     local mt = getmetatable(t)
     if not mt or not mt.__len then
