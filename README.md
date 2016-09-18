@@ -2,23 +2,38 @@
 
 This library is for creating and composing parsers.
 
+[Example Lua Parser](http://github.com/meric/l2l/blob/master/l2l/lua.lua#L410)
+
 For example:
 
 ```
 local grammar = require("leftry")
 local factor = grammar.factor
 local span = grammar.span
+
+# Declaring a Non-Terminal, "A"
 local A = factor("A", function(A) return
-  span(A, "1"), "1"
-end)
-local B = factor("B", function(B) return
-  span(B, "2"), A
+  span(A, "1"), # 1st alternative, A := A "1"
+  "1"           # 2nd alternative, A := "1"
 end)
 
+# Declaring a Non-Terminal, "B"
+local B = factor("B", function(B) return
+  span(B, "2"), # 1st alternative, B := B "2"
+  A             # 2nd alternative, B := A
+end)
+
+# Using the composed parser.
+# The first argument is the input string.
+# The second argument is the string index to start from.
 print(B("111122222", 1))
 ```
 
 This creates a parser `B` that can parse the string "111122222".
+
+The purpose of the anonymous function in declaration of the non-terminal
+enables self-reference and referencing other non-terminals that are not fully 
+initialized yet.
 
 
 ## Install ##
@@ -34,10 +49,6 @@ version of the grammar, then apply the left-recursive grammar. Like how a human 
 
 * http://hafiz.myweb.cs.uwindsor.ca/xsaiga/fullAg.html
 * https://github.com/djspiewak/gll-combinators
-
-## Lua Parser ##
-
-[Lua parser implemented in Leftry](leftry/language/lua.lua#L134)
 
 ## Running unit tests ##
 
@@ -72,6 +83,9 @@ version of the grammar, then apply the left-recursive grammar. Like how a human 
   end
   -- actual == {4, 7, 10}
   ```
+
+  This can be useful, for example in a programming language parser, to iterate
+  through each parsed statement.
 
 * Composition:
 
@@ -196,6 +210,16 @@ Performance of the built-in Lua parser.
   ```
   span("1", opt("2"), "3")
   ```
+
+* `any(...)`
+
+  Create an any element. The any element contains a set of alternatives, that 
+  will be attempted from left to right.
+
+  The `any` element is used internally to wrap the alternatives returned
+  by the `factor` "generate" function.
+
+  You do not need to worry about using `any`.
 
 * `span(...)`
 
