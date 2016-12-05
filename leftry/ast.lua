@@ -29,16 +29,32 @@ local function reduce(name, indices, __tostring)
   proto.template = template
   proto.terms = terms
 
+  function proto:match(pattern, g)
+    if (not pattern or proto == pattern) and (not g or g(self)) then
+      return self
+    end
+    for i, v in ipairs(arguments) do
+      if self[v[2]] then
+        if type(self[v[2]]) == "table" and self[v[2]].match then
+          local value = self[v[2]]:match(pattern, g)
+          if value ~= nil then
+            return value
+          end
+        end
+      end
+    end
+    return
+  end
+
   function proto:gsub(pattern, f, g)
     -- In-place substitution. Highly recommended to make a :copy() before
     -- calling gsub.
-    if proto == pattern and (not g or g(self)) then
+    if (not pattern or proto == pattern) and (not g or g(self)) then
       return f(self, self)
     end
-    local args = {}
     for i, v in ipairs(arguments) do
       if self[v[2]] then
-        if utils.hasmetatable(self[v[2]], pattern) and
+        if (not pattern or utils.hasmetatable(self[v[2]], pattern)) and
             (not g or g(self[v[2]])) then
           self[v[2]] = f(self[v[2]], self, v[2])
         elseif type(self[v[2]]) == "table" and self[v[2]].gsub then
@@ -172,10 +188,16 @@ local function id(name, key, __tostring, validate)
   end
 
   function proto:gsub(pattern, f, g)
-    if proto == pattern and (not g or g(self)) then
+    if (not pattern or proto == pattern) and (not g or g(self)) then
       return f(self, self)
     end
     return self
+  end
+
+  function proto:match(pattern, g)
+    if (not pattern or proto == pattern) and (not g or g(self)) then
+      return self
+    end
   end
 
   function proto:__eq(p)
@@ -204,10 +226,16 @@ local function const(name, value)
   end
 
   function proto:gsub(pattern, f, g)
-    if proto == pattern and (not g or g(self)) then
+    if (not pattern or proto == pattern) and (not g or g(self)) then
       return f(self, self)
     end
     return self
+  end
+
+  function proto:match(pattern, g)
+    if (not pattern or proto == pattern) and (not g or g(self)) then
+      return self
+    end
   end
   return proto
 end
@@ -242,6 +270,24 @@ local function list(name, separator, __tostring, validate)
     return self
   end
 
+
+  function proto:match(pattern, g)
+    -- if (not pattern or proto == pattern) and (not g or g(self)) then
+    --   return self
+    -- end
+    for i=1, self.n do
+      if (not pattern or utils.hasmetatable(self[i], pattern)) and
+          (not g or g(self[i])) then
+        return self[i]
+      elseif type(self[i]) == "table" and self[i].match then
+        local value = self[i]:match(pattern, g)
+        if value ~= nil then
+          return value
+        end
+      end
+    end
+  end
+
   function proto:gsub(pattern, f, g)
     for i=1, self.n do
       if type(self[i]) == "string" then
@@ -250,7 +296,7 @@ local function list(name, separator, __tostring, validate)
         else
           self[i] = self[i]
         end
-      elseif utils.hasmetatable(self[i], pattern) and
+      elseif (not pattern or utils.hasmetatable(self[i], pattern)) and
           (not g or g(self[i])) then
         self[i] = f(self[i], self, i)
       elseif type(self[i]) == "table" and self[i].gsub then

@@ -1,11 +1,15 @@
 local prototype = require("leftry.utils").prototype
 
-local trait = prototype("trait", function(trait, name, memoize_n)
+local trait = prototype("trait", function(trait, name)
   return setmetatable({name=name, memoize={}}, trait)
 end)
 
 function trait:__tostring()
   return self.name
+end
+
+function trait:has(mt)
+  return self[mt]
 end
 
 function trait:where(mt, impl, n)
