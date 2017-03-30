@@ -2,7 +2,10 @@ local __ipairs = ipairs
 
 local ipairs = ipairs
 
-local len = function(t)
+local function len(t)
+  if not t then
+    return 0
+  end
   return #t
 end
 
@@ -18,6 +21,9 @@ end
 
 if #setmetatable({}, {__len=function() return 5 end}) == 0 then
   len = function(t)
+    if not t then
+      return 0
+    end
     local mt = getmetatable(t)
     if not mt or not mt.__len then
       return #t
@@ -57,7 +63,7 @@ end
 local function map(f, t, n)
   local u = {}
   for i=1, n or len(t) do
-    u[i]=f(t[i])
+    u[i]=f(t[i], i)
   end
   return u
 end
