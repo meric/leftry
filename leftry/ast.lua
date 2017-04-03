@@ -246,6 +246,7 @@ end
 -- For now, see leftry/language/lua.lua for usage.
 local function list(name, separator, __tostring, validate)
   local proto = prototype(name, function(self, obj, _, index, rest)
+    obj = obj or {}
     obj.n = obj.n or #obj
     if validate then
       local validated = validate(obj)
