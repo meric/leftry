@@ -127,6 +127,20 @@ local function torepresentation(callable, arguments)
     table.concat(map(tostring, arguments), ","))
 end
 
+local function compose(a, ...)
+  if not ... then
+    return a
+  end
+  local functions = {...}
+  return function(...)
+    local returns = table.pack(a(...))
+    for i, fun in ipairs(functions) do
+      returns = table.pack(fun(table.unpack(returns, returns.n)))
+    end
+    return table.unpack(returns, returns.n)
+  end
+end
+
 return {
   prototype=prototype,
   ipairs = ipairs,
@@ -141,5 +155,6 @@ return {
   reverse=reverse,
   each=each,
   escape=escape,
-  hasmetatable=hasmetatable
+  hasmetatable=hasmetatable,
+  compose=compose
 }
