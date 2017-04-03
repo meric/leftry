@@ -60,6 +60,14 @@ local function escape(text)
     :gsub("\n", "\\n").."\""
 end
 
+local function inserts(f, t, n)
+  local u = {}
+  for i, v in ipairs(t) do
+    table.insert(u, f(v, i, u))
+  end
+  return u
+end
+
 local function map(f, t, n)
   local u = {}
   for i=1, n or len(t) do
@@ -135,6 +143,9 @@ local function compose(a, ...)
   return function(...)
     local returns = table.pack(a(...))
     for i, fun in ipairs(functions) do
+      if not (returns[1] ~= nil or returns.n > 1) then
+        break
+      end
       returns = table.pack(fun(table.unpack(returns, returns.n)))
     end
     return table.unpack(returns, returns.n)
@@ -146,6 +157,7 @@ return {
   ipairs = ipairs,
   len=len,
   dotmap=dotmap,
+  inserts=inserts,
   map=map,
   filter=filter,
   torepresentation=torepresentation,
