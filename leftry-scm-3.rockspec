@@ -1,5 +1,5 @@
 package = "Leftry"
-version = "scm-2"
+version = "scm-3"
 source = {
   url = "git://github.com/meric/leftry"
 }
@@ -49,9 +49,12 @@ build = {
     ["leftry.elements.utils"]="leftry/elements/utils.lua",
     ["leftry.immutable.memoize"]="leftry/immutable/memoize.lua",
     ["leftry.immutable.set"]="leftry/immutable/set.lua",
-    ["leftry.grammar"]="leftry/grammar.lua",
     ["leftry.language.lua"]="leftry/language/lua.lua",
+    ["leftry.grammar"]="leftry/grammar.lua",
     ["leftry.trait"]="leftry/trait.lua",
     ["leftry.utils"]="leftry/utils.lua",
+    ["leftry.ast"]="leftry/ast.lua",
+    ["leftry.reducers"]="leftry/reducers.lua",
+    ["leftry.initializers"]="leftry/initializers.lua",
   }
 }
